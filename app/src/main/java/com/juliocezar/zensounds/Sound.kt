@@ -1,5 +1,6 @@
 package com.juliocezar.zensounds
 
+import android.health.connect.datatypes.units.Volume
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -8,5 +9,7 @@ data class Sound(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
     val icon: String,
-    val filePath: String // Caminho ou URI do arquivo de áudio
+    val filePath: String,
+    val volume: Float = 1.0f
+
 )

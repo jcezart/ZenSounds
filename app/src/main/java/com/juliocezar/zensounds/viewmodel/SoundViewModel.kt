@@ -22,7 +22,6 @@ class SoundViewModel(private val context: Context) : ViewModel() {
     private val _selectedSound = mutableStateOf("")
     val selectedSound: String get() = _selectedSound.value
 
-    // Lista de sons do banco de dados
     val sounds: Flow<List<Sound>>
 
     init {
@@ -31,7 +30,6 @@ class SoundViewModel(private val context: Context) : ViewModel() {
         sounds = soundDao.getAllSounds()
         audioPlayerManager = AudioPlayerManager(context)
 
-        // Inicializar o banco de dados com sons padrão, se necessário
         initializeSounds()
     }
 
@@ -41,16 +39,16 @@ class SoundViewModel(private val context: Context) : ViewModel() {
             //soundDao.deleteAllSounds()
             if (currentSounds.isEmpty()) {
                 val defaultSounds = listOf(
-                    Sound(name = "Rain", icon = "☔", filePath = "android.resource://${context.packageName}/raw/rain_sound"),
-                    Sound(name = "Rain & Thunder", icon = "💧⚡", filePath = "android.resource://${context.packageName}/raw/thunder_sound"),
-                    Sound(name = "Wind", icon = "💨", filePath = "android.resource://${context.packageName}/raw/wind_sound"),
-                    Sound(name = "Forest", icon = "🌲", filePath = "android.resource://${context.packageName}/raw/forest_sound"),
-                    Sound(name = "Stream", icon = "🌊", filePath = "android.resource://${context.packageName}/raw/stream_sound"),
-                    Sound(name = "Fireplace", icon = "🔥🪵", filePath = "android.resource://${context.packageName}/raw/fire_sound"),
-                    Sound(name = "TV Static", icon = "📺", filePath = "android.resource://${context.packageName}/raw/tv_sound"),
-                    Sound(name = "Car Engine", icon = "🚗", filePath = "android.resource://${context.packageName}/raw/car_sound"))
-
-                soundDao.insertSounds(defaultSounds) //test
+                    Sound(name = "Rain", icon = "☔", filePath = "android.resource://${context.packageName}/raw/rain_sound", volume = 1.0f),
+                    Sound(name = "Rain & Thunder", icon = "💧⚡", filePath = "android.resource://${context.packageName}/raw/thunder_sound", volume = 1.0f),
+                    Sound(name = "Wind", icon = "💨", filePath = "android.resource://${context.packageName}/raw/wind_sound", volume = 1.0f),
+                    Sound(name = "Forest", icon = "🌲", filePath = "android.resource://${context.packageName}/raw/forest_sound", volume = 1.0f),
+                    Sound(name = "Stream", icon = "🌊", filePath = "android.resource://${context.packageName}/raw/stream_sound", volume = 1.0f),
+                    Sound(name = "Fireplace", icon = "🔥🪵", filePath = "android.resource://${context.packageName}/raw/fire_sound", volume = 1.0f),
+                    Sound(name = "TV Static", icon = "📺", filePath = "android.resource://${context.packageName}/raw/tv_sound", volume = 0.1f),
+                    Sound(name = "Car Engine", icon = "🚗", filePath = "android.resource://${context.packageName}/raw/car_sound", volume = 1.0f)
+                )
+                soundDao.insertSounds(defaultSounds)
             }
         }
     }
@@ -64,7 +62,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
             } else {
                 _selectedSound.value = soundName
                 _isPlaying.value = true
-                audioPlayerManager.playSound(sound.filePath, overlapDurationMs = 5000)
+                audioPlayerManager.playSound(sound.filePath, sound.volume, overlapDurationMs = 5000)
             }
         }
     }
@@ -87,7 +85,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                 val previousSound = currentSounds[currentIndex - 1]
                 _selectedSound.value = previousSound.name
                 _isPlaying.value = true
-                audioPlayerManager.playSound(previousSound.filePath, overlapDurationMs = 5000)
+                audioPlayerManager.playSound(previousSound.filePath, previousSound.volume, overlapDurationMs = 5000)
             }
         }
     }
@@ -100,7 +98,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                 val nextSound = currentSounds[currentIndex + 1]
                 _selectedSound.value = nextSound.name
                 _isPlaying.value = true
-                audioPlayerManager.playSound(nextSound.filePath, overlapDurationMs = 5000)
+                audioPlayerManager.playSound(nextSound.filePath, nextSound.volume, overlapDurationMs = 5000)
             }
         }
     }
