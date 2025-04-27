@@ -50,7 +50,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                     Sound(name = "TV Static", icon = "📺", filePath = "android.resource://${context.packageName}/raw/tv_sound"),
                     Sound(name = "Car Engine", icon = "🚗", filePath = "android.resource://${context.packageName}/raw/car_sound"))
 
-                soundDao.insertSounds(defaultSounds)
+                soundDao.insertSounds(defaultSounds) //test
             }
         }
     }
