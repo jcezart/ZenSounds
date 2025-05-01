@@ -62,7 +62,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
             } else {
                 _selectedSound.value = soundName
                 _isPlaying.value = true
-                audioPlayerManager.playSound(sound.filePath, sound.volume, overlapDurationMs = 5000)
+                audioPlayerManager.playSound(sound.filePath, sound.volume, overlapDurationMs = 18000) // Aumentado para 18 segundos
             }
         }
     }
@@ -85,7 +85,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                 val previousSound = currentSounds[currentIndex - 1]
                 _selectedSound.value = previousSound.name
                 _isPlaying.value = true
-                audioPlayerManager.playSound(previousSound.filePath, previousSound.volume, overlapDurationMs = 5000)
+                audioPlayerManager.playSound(previousSound.filePath, previousSound.volume, overlapDurationMs = 18000) // Aumentado para 18 segundos
             }
         }
     }
@@ -98,7 +98,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                 val nextSound = currentSounds[currentIndex + 1]
                 _selectedSound.value = nextSound.name
                 _isPlaying.value = true
-                audioPlayerManager.playSound(nextSound.filePath, nextSound.volume, overlapDurationMs = 5000)
+                audioPlayerManager.playSound(nextSound.filePath, nextSound.volume, overlapDurationMs = 18000) // Aumentado para 18 segundos
             }
         }
     }

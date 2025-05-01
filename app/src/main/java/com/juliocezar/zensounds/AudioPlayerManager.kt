@@ -5,12 +5,14 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import kotlinx.coroutines.*
+import kotlin.math.exp
 
 class AudioPlayerManager(context: Context) {
     private val player1: ExoPlayer = ExoPlayer.Builder(context).build()
     private val player2: ExoPlayer = ExoPlayer.Builder(context).build()
     private var isPlayer1Active = true
     private var currentSoundUri: String? = null
+    private var currentVolume: Float = 1.0f
     private var overlapJob: Job? = null
     private var crossfadeJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -27,15 +29,16 @@ class AudioPlayerManager(context: Context) {
         stop()
 
         currentSoundUri = uri
+        currentVolume = volume
         val mediaItem = MediaItem.fromUri(uri)
         if (isPlayer1Active) {
             player1.setMediaItem(mediaItem)
-            player1.volume = volume // Aplica o volume específico
+            player1.volume = volume
             player1.prepare()
             player1.play()
         } else {
             player2.setMediaItem(mediaItem)
-            player2.volume = volume // Aplica o volume específico
+            player2.volume = volume
             player2.prepare()
             player2.play()
         }
@@ -49,24 +52,30 @@ class AudioPlayerManager(context: Context) {
 
         val nextMediaItem = MediaItem.fromUri(nextUri)
         nextPlayer.setMediaItem(nextMediaItem)
-        nextPlayer.volume = 0.0f // Volume inicial do próximo player é 0
+        nextPlayer.volume = 0.0f
         nextPlayer.prepare()
+        nextPlayer.seekTo(0)
 
+        overlapJob?.cancel()
         overlapJob = coroutineScope.launch {
             while (isActive) {
                 val duration = currentPlayer.duration
                 val currentPosition = currentPlayer.currentPosition
 
                 if (duration > 0 && currentPosition > 0 && duration - currentPosition <= overlapDurationMs) {
-                    // Iniciar o próximo player e o crossfade
                     nextPlayer.play()
                     crossfade(currentPlayer, nextPlayer, volume, overlapDurationMs)
                     isPlayer1Active = !isPlayer1Active
-                    startOverlap(nextUri, volume, overlapDurationMs)
-                    break
+                    break // Sai do loop após iniciar o crossfade
                 }
 
-                delay(100)
+                delay(50)
+            }
+
+            // Após o crossfade, reiniciar o loop para o próximo ciclo
+            delay(overlapDurationMs) // Espera o crossfade terminar antes de iniciar o próximo ciclo
+            if (currentSoundUri != null && (player1.isPlaying || player2.isPlaying)) {
+                startOverlap(currentSoundUri!!, currentVolume, overlapDurationMs)
             }
         }
 
@@ -74,6 +83,7 @@ class AudioPlayerManager(context: Context) {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_ENDED) {
                     if (!nextPlayer.isPlaying) {
+                        overlapJob?.cancel()
                         startOverlap(nextUri, volume, overlapDurationMs)
                     }
                 }
@@ -84,15 +94,16 @@ class AudioPlayerManager(context: Context) {
     private fun crossfade(currentPlayer: ExoPlayer, nextPlayer: ExoPlayer, targetVolume: Float, durationMs: Long) {
         crossfadeJob?.cancel()
         crossfadeJob = coroutineScope.launch {
-            val steps = 100 // Número de passos para o crossfade
-            val stepDuration = durationMs / steps // Duração de cada passo
+            val steps = 400
+            val stepDuration = durationMs / steps
             repeat(steps) { step ->
                 val fraction = step / steps.toFloat()
-                currentPlayer.volume = (1.0f - fraction) * targetVolume // Diminui o volume do player atual
-                nextPlayer.volume = fraction * targetVolume // Aumenta o volume do próximo player
+                // Usar uma curva exponencial para o crossfade
+                val expFraction = 1 - exp(-5 * fraction)
+                currentPlayer.volume = (1.0f - expFraction) * targetVolume
+                nextPlayer.volume = expFraction * targetVolume
                 delay(stepDuration)
             }
-            // Garantir que o volume final esteja correto
             currentPlayer.volume = 0.0f
             nextPlayer.volume = targetVolume
         }
@@ -112,7 +123,7 @@ class AudioPlayerManager(context: Context) {
             player2.play()
         }
         if (currentSoundUri != null) {
-            startOverlap(currentSoundUri!!, 1.0f, 7000) // Usa volume padrão para resume
+            startOverlap(currentSoundUri!!, currentVolume, 18000)
         }
     }
 
