@@ -1,11 +1,12 @@
 package com.juliocezar.zensounds
 
 import android.content.Context
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import kotlinx.coroutines.*
-import kotlin.math.exp
+import kotlin.math.min
 
 class AudioPlayerManager(context: Context) {
     private val player1: ExoPlayer = ExoPlayer.Builder(context).build()
@@ -18,6 +19,7 @@ class AudioPlayerManager(context: Context) {
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     fun playSound(uri: String, volume: Float, overlapDurationMs: Long) {
+        println("DEBUG: playSound called with uri=$uri, volume=$volume")
         overlapJob?.cancel()
         crossfadeJob?.cancel()
 
@@ -29,7 +31,7 @@ class AudioPlayerManager(context: Context) {
         stop()
 
         currentSoundUri = uri
-        currentVolume = volume
+        currentVolume = volume.coerceIn(0.0f, 1.0f)
         val mediaItem = MediaItem.fromUri(uri)
         if (isPlayer1Active) {
             player1.setMediaItem(mediaItem)
@@ -42,50 +44,83 @@ class AudioPlayerManager(context: Context) {
             player2.prepare()
             player2.play()
         }
+        println("DEBUG: Started playing uri=$uri on player${if (isPlayer1Active) 1 else 2}")
 
-        startOverlap(uri, volume, overlapDurationMs)
+        startOverlap(overlapDurationMs)
     }
 
-    private fun startOverlap(nextUri: String, volume: Float, overlapDurationMs: Long) {
+    private fun startOverlap(overlapDurationMs: Long) {
         val currentPlayer = if (isPlayer1Active) player1 else player2
         val nextPlayer = if (isPlayer1Active) player2 else player1
+        val uri = currentSoundUri ?: return
+        println("DEBUG: Starting overlap for uri=$uri")
 
-        val nextMediaItem = MediaItem.fromUri(nextUri)
+        val nextMediaItem = MediaItem.fromUri(uri)
         nextPlayer.setMediaItem(nextMediaItem)
         nextPlayer.volume = 0.0f
         nextPlayer.prepare()
         nextPlayer.seekTo(0)
+        println("DEBUG: Prepared nextPlayer with uri=$uri")
 
         overlapJob?.cancel()
         overlapJob = coroutineScope.launch {
-            while (isActive) {
-                val duration = currentPlayer.duration
-                val currentPosition = currentPlayer.currentPosition
-
-                if (duration > 0 && currentPosition > 0 && duration - currentPosition <= overlapDurationMs) {
-                    nextPlayer.play()
-                    crossfade(currentPlayer, nextPlayer, volume, overlapDurationMs)
-                    isPlayer1Active = !isPlayer1Active
-                    break // Sai do loop após iniciar o crossfade
+            var duration = currentPlayer.duration
+            var attempts = 0
+            while (duration <= 0 || duration == C.TIME_UNSET) {
+                if (attempts++ > 50) { // Limite de tentativas para evitar loop infinito
+                    duration = overlapDurationMs // Fallback para duração padrão
+                    println("DEBUG: Duration not detected for uri=$uri, using fallback=$duration")
+                    break
                 }
-
-                delay(50)
+                delay(100)
+                duration = currentPlayer.duration
+                println("DEBUG: Waiting for duration, attempt=$attempts, current=$duration")
             }
 
-            // Após o crossfade, reiniciar o loop para o próximo ciclo
-            delay(overlapDurationMs) // Espera o crossfade terminar antes de iniciar o próximo ciclo
-            if (currentSoundUri != null && (player1.isPlaying || player2.isPlaying)) {
-                startOverlap(currentSoundUri!!, currentVolume, overlapDurationMs)
+            val effectiveOverlap = min(overlapDurationMs, duration / 2).coerceAtLeast(1000L) // Mínimo de 1s
+            println("DEBUG: duration=$duration, effectiveOverlap=$effectiveOverlap")
+
+            while (isActive) {
+                val currentPosition = currentPlayer.currentPosition
+                if (duration > 0 && currentPosition > 0 && duration - currentPosition <= effectiveOverlap) {
+                    nextPlayer.play()
+                    println("DEBUG: nextPlayer started for uri=$uri")
+                    crossfade(currentPlayer, nextPlayer, currentVolume, effectiveOverlap)
+                    isPlayer1Active = !isPlayer1Active
+                    break
+                }
+                delay(50)
+                if (!currentPlayer.isPlaying && !nextPlayer.isPlaying) {
+                    println("DEBUG: Both players stopped unexpectedly for uri=$uri")
+                    break // Sai do loop para evitar polling inútil
+                }
+            }
+
+            delay(effectiveOverlap)
+            if (currentSoundUri == uri) {
+                println("DEBUG: Restarting loop for uri=$uri")
+                startOverlap(overlapDurationMs)
+            } else {
+                println("DEBUG: Loop not restarted: uri=$uri, currentSoundUri=$currentSoundUri, player1Playing=${player1.isPlaying}, player2Playing=${player2.isPlaying}")
             }
         }
 
         currentPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_ENDED) {
+                if (playbackState == Player.STATE_ENDED && currentSoundUri == uri) {
                     if (!nextPlayer.isPlaying) {
+                        println("DEBUG: Fallback triggered for uri=$uri")
                         overlapJob?.cancel()
-                        startOverlap(nextUri, volume, overlapDurationMs)
+                        startOverlap(overlapDurationMs)
                     }
+                }
+            }
+
+            override fun onPlayerError(error: com.google.android.exoplayer2.PlaybackException) {
+                println("DEBUG: Player error for uri=$uri, error=${error.message}")
+                if (currentSoundUri == uri) {
+                    overlapJob?.cancel()
+                    startOverlap(overlapDurationMs) // Tenta reiniciar
                 }
             }
         })
@@ -94,18 +129,20 @@ class AudioPlayerManager(context: Context) {
     private fun crossfade(currentPlayer: ExoPlayer, nextPlayer: ExoPlayer, targetVolume: Float, durationMs: Long) {
         crossfadeJob?.cancel()
         crossfadeJob = coroutineScope.launch {
-            val steps = 400
+            val steps = 100
             val stepDuration = durationMs / steps
             repeat(steps) { step ->
                 val fraction = step / steps.toFloat()
-                // Usar uma curva exponencial para o crossfade
-                val expFraction = 1 - exp(-5 * fraction)
-                currentPlayer.volume = (1.0f - expFraction) * targetVolume
-                nextPlayer.volume = expFraction * targetVolume
+                val currentVol = (1.0f - fraction) * targetVolume
+                val nextVol = fraction * targetVolume
+                currentPlayer.volume = currentVol
+                nextPlayer.volume = nextVol
                 delay(stepDuration)
             }
             currentPlayer.volume = 0.0f
             nextPlayer.volume = targetVolume
+            currentPlayer.pause()
+            println("DEBUG: Crossfade completed for uri=$currentSoundUri")
         }
     }
 
@@ -114,6 +151,7 @@ class AudioPlayerManager(context: Context) {
         crossfadeJob?.cancel()
         player1.pause()
         player2.pause()
+        println("DEBUG: Paused players")
     }
 
     fun resume() {
@@ -122,8 +160,9 @@ class AudioPlayerManager(context: Context) {
         } else {
             player2.play()
         }
-        if (currentSoundUri != null) {
-            startOverlap(currentSoundUri!!, currentVolume, 18000)
+        currentSoundUri?.let {
+            println("DEBUG: Resuming uri=$it")
+            startOverlap(18000)
         }
     }
 
@@ -133,6 +172,7 @@ class AudioPlayerManager(context: Context) {
         player1.stop()
         player2.stop()
         currentSoundUri = null
+        println("DEBUG: Stopped players")
     }
 
     fun release() {
@@ -140,5 +180,6 @@ class AudioPlayerManager(context: Context) {
         crossfadeJob?.cancel()
         player1.release()
         player2.release()
+        println("DEBUG: Released players")
     }
 }
