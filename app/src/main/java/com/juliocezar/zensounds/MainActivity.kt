@@ -34,12 +34,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ZenSoundsApp(soundViewModel: SoundViewModel = viewModel(factory = SoundViewModelFactory(LocalContext.current))) {
     val sounds by soundViewModel.sounds.collectAsState(initial = emptyList())
+    val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF1A3C34)) // Cor de fundo verde escura
-            .padding(top = 16.dp)
+            .padding(
+                top = 16.dp,
+                bottom = navigationBarPadding.calculateBottomPadding())
     ) {
         // Título
         Text(
