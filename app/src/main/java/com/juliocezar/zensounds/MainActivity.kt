@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.juliocezar.zensounds.ui.theme.ZenSoundsTheme
 import com.juliocezar.zensounds.viewmodel.SoundViewModel
 import com.juliocezar.zensounds.viewmodel.SoundViewModelFactory
 
@@ -26,7 +28,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ZenSoundsApp()
+            ZenSoundsTheme { // Aplica o tema personalizado
+                ZenSoundsApp()
+            }
         }
     }
 }
@@ -39,7 +43,8 @@ fun ZenSoundsApp(soundViewModel: SoundViewModel = viewModel(factory = SoundViewM
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1A3C34)) // Cor de fundo verde escura
+            //.background(Color(0xFF1A3C34)) // Cor de fundo verde escura
+            .background(Color(0xFF0C1C2C))
             .padding(
                 top = 16.dp,
                 bottom = navigationBarPadding.calculateBottomPadding())
@@ -48,7 +53,7 @@ fun ZenSoundsApp(soundViewModel: SoundViewModel = viewModel(factory = SoundViewM
         Text(
             text = "ZenSounds",
             fontSize = 24.sp,
-            color = Color.White,
+            color = Color(0xFFB0C4D4),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(42.dp),
@@ -96,7 +101,9 @@ fun SoundCard(soundName: String, icon: String, isSelected: Boolean, onClick: () 
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFFE0E0E0) else Color.White
+            //containerColor = if (isSelected) Color(0xFFE0E0E0) else Color.White
+            containerColor = if (isSelected) Color(0xFF24364D) else Color(0xFF1A2B3D)
+
         )
     ) {
         Column(
@@ -109,13 +116,15 @@ fun SoundCard(soundName: String, icon: String, isSelected: Boolean, onClick: () 
             Text(
                 text = icon,
                 fontSize = 32.sp,
-                color = Color(0xFF1A3C34)
+                //color = Color(0xFF1A3C34)
+                color = Color(0xFF0C1C2C)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = soundName,
                 fontSize = 16.sp,
-                color = Color(0xFF1A3C34)
+                //color = Color(0xFF1A3C34)
+                color = Color(0xFF0C1C2C)
             )
         }
     }
@@ -131,30 +140,59 @@ fun PlaybackControls(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1A3C34))
+            //.background(Color(0xFF1A3C34))
+            .background(Color(0xFF0C1C2C))
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onPreviousClick) {
+        Box(
+            modifier = Modifier
+                .clickable(onClick = onPreviousClick)
+                .background(Color(0xFF1A2B3D), shape = CircleShape)
+                .size(48.dp)
+                .padding(0.dp), // Remove padding interno pra evitar sobreposição
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = "⏪",
                 fontSize = 24.sp,
-                color = Color.White
+                color = Color.White,
+                modifier = Modifier.background(Color.Transparent) // Garante que o texto não herde fundo
             )
         }
-        IconButton(onClick = onPlayPauseClick) {
+
+        // Botão Play/Pause
+        Box(
+            modifier = Modifier
+                .clickable(onClick = onPlayPauseClick)
+                .background(Color(0xFF1A2B3D), shape = CircleShape)
+                .size(56.dp)
+                .padding(0.dp),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = if (isPlaying) "⏸️" else "▶️",
                 fontSize = 32.sp,
-                color = Color.White
+                color = Color.White,
+                modifier = Modifier.background(Color.Transparent)
             )
         }
-        IconButton(onClick = onNextClick) {
+
+        // Botão Próximo
+        Box(
+            modifier = Modifier
+                .clickable(onClick = onNextClick)
+                .background(Color(0xFF1A2B3D), shape = CircleShape)
+                .size(48.dp)
+                .padding(0.dp),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = "⏩",
                 fontSize = 24.sp,
-                color = Color.White
+                color = Color.White,
+                modifier = Modifier.background(Color.Transparent)
             )
         }
     }
