@@ -39,14 +39,14 @@ class SoundViewModel(private val context: Context) : ViewModel() {
             //soundDao.deleteAllSounds()
             if (currentSounds.isEmpty()) {
                 val defaultSounds = listOf(
-                    Sound(name = "Rain", icon = "☔", filePath = "android.resource://${context.packageName}/raw/rain_sound", volume = 1.0f),
-                    Sound(name = "Rain & Thunder", icon = "💧⚡", filePath = "android.resource://${context.packageName}/raw/thunder_sound", volume = 1.0f),
-                    Sound(name = "Wind", icon = "💨", filePath = "android.resource://${context.packageName}/raw/wind_sound", volume = 1.0f),
-                    Sound(name = "Forest", icon = "🌲", filePath = "android.resource://${context.packageName}/raw/forest_sound", volume = 1.0f),
-                    Sound(name = "Stream", icon = "🌊", filePath = "android.resource://${context.packageName}/raw/stream_sound", volume = 1.0f),
-                    Sound(name = "Fireplace", icon = "🔥🪵", filePath = "android.resource://${context.packageName}/raw/fire_sound", volume = 1.0f),
-                    Sound(name = "TV Static", icon = "📺", filePath = "android.resource://${context.packageName}/raw/tv_sound", volume = 0.1f),
-                    Sound(name = "Car Engine", icon = "🚗", filePath = "android.resource://${context.packageName}/raw/car_sound", volume = 1.0f)
+                    Sound(name = "Rain", icon = " ", filePath = "android.resource://${context.packageName}/raw/rain_sound", volume = 1.0f),
+                    Sound(name = "Rain & Thunder", icon = " ", filePath = "android.resource://${context.packageName}/raw/thunder_sound", volume = 1.0f),
+                    Sound(name = "Wind", icon = " ", filePath = "android.resource://${context.packageName}/raw/wind_sound", volume = 1.0f),
+                    Sound(name = "Forest", icon = " ", filePath = "android.resource://${context.packageName}/raw/forest_sound", volume = 1.0f),
+                    Sound(name = "Stream", icon = " ", filePath = "android.resource://${context.packageName}/raw/stream_sound", volume = 1.0f),
+                    Sound(name = "Fireplace", icon = " ", filePath = "android.resource://${context.packageName}/raw/fire_sound", volume = 1.0f),
+                    Sound(name = "TV Static", icon = " ", filePath = "android.resource://${context.packageName}/raw/tv_sound", volume = 0.1f),
+                    Sound(name = "Car Engine", icon = " ", filePath = "android.resource://${context.packageName}/raw/car_sound", volume = 1.0f)
                 )
                 soundDao.insertSounds(defaultSounds)
             }
