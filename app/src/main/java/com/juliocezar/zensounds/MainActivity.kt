@@ -1,8 +1,11 @@
 package com.juliocezar.zensounds
 
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.view.WindowCompat
+import android.view.WindowInsets
 import com.juliocezar.zensounds.ui.theme.ZenSoundsTheme
 import com.juliocezar.zensounds.viewmodel.SoundViewModel
 import com.juliocezar.zensounds.viewmodel.SoundViewModelFactory
@@ -35,9 +40,22 @@ import androidx.compose.ui.text.font.FontWeight
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Permite conteúdo sob as system bars
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
-            ZenSoundsTheme { // Aplica o tema personalizado
+            ZenSoundsTheme {
                 MainScreen()
+            }
+        }
+
+        // Aguarda a decorView estar pronta
+        window.decorView.post {
+            window.insetsController?.let { controller ->
+                controller.hide(WindowInsets.Type.systemBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         }
     }
@@ -46,13 +64,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(soundViewModel: SoundViewModel = viewModel(factory = SoundViewModelFactory(LocalContext.current))) {
     var selectedTab by remember { mutableStateOf(0) } // 0 para Sons
-    val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(selectedTab) { tabIndex ->
+            BottomNavigationBar(selectedTab, soundViewModel.isPlaying, { tabIndex ->
                 selectedTab = tabIndex
-            }
+            }, { soundViewModel.onPlayPauseClicked() })
         }
     ) { innerPadding ->
         ZenSoundsApp(soundViewModel, innerPadding)
@@ -69,8 +86,9 @@ fun ZenSoundsApp(soundViewModel: SoundViewModel, innerPadding: PaddingValues) {
             .background(Color(0xFF0C1C2C))
             .padding(
                 top = 16.dp,
-                bottom = innerPadding.calculateBottomPadding() // Ajusta o padding da Scaffold
+                bottom = innerPadding.calculateBottomPadding() // Usa o padding da Scaffold pra ajustar
             )
+            .systemBarsPadding() // Adiciona padding pra barras do sistema
     ) {
         // Título
         Text(
@@ -106,60 +124,87 @@ fun ZenSoundsApp(soundViewModel: SoundViewModel, innerPadding: PaddingValues) {
                 )
             }
         }
+    }
+}
 
-        // Controles de reprodução
-        PlaybackControls(
-            isPlaying = soundViewModel.isPlaying,
-            onPlayPauseClick = { soundViewModel.onPlayPauseClicked() },
-            onPreviousClick = { },
-            onNextClick = { }
+@Composable
+fun BottomNavigationBar(
+    selectedTab: Int,
+    isPlaying: Boolean,
+    onTabSelected: (Int) -> Unit,
+    onPlayPauseClick: () -> Unit
+) {
+    Surface(
+        tonalElevation = 4.dp, // Dá uma leve elevação (sombra)
+        shadowElevation = 6.dp,
+        color = Color(0xFF0C1C2C), // Cor de fundo
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(72.dp) // Altura aumentada pra respiro e acomodar o botão
+            .border(1.dp, Color(0xFF1A2B3D))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(
+                iconId = R.drawable.music,
+                isSelected = selectedTab == 0,
+                onClick = { onTabSelected(0) }
+            )
+            PlayPauseButton(
+                isPlaying = isPlaying,
+                onClick = onPlayPauseClick
+            )
+            BottomNavItem(
+                iconId = R.drawable.bible,
+                isSelected = selectedTab == 1,
+                onClick = { onTabSelected(1) }
+            )
+        }
+    }
+}
+
+@Composable
+fun BottomNavItem(iconId: Int, isSelected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .background(
+                color = if (isSelected) Color(0xFF24364D) else Color(0xFF1A2B3D),
+                shape = CircleShape
+            )
+            .size(56.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = iconId),
+            contentDescription = null,
+            modifier = Modifier.size(28.dp)
         )
     }
 }
 
 @Composable
-fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    Row(
+fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit) {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF0C1C2C))
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+            .clickable(onClick = onClick)
+            .background(
+                color = Color(0xFF1A2B3D), // Fundo padrão, sem seleção destacada
+                shape = CircleShape
+            )
+            .size(56.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .clickable { onTabSelected(0) }
-                .background(if (selectedTab == 0) Color(0xFF24364D) else Color(0xFF1A2B3D), shape = CircleShape)
-                .size(48.dp)
-                .padding(0.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.music),
-                contentDescription = "Sons",
-                modifier = Modifier
-                    .size(28.dp)
-                    .background(Color.Transparent)
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .clickable { onTabSelected(1) }
-                .background(if (selectedTab == 1) Color(0xFF24364D) else Color(0xFF1A2B3D), shape = CircleShape)
-                .size(48.dp)
-                .padding(0.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.bible),
-                contentDescription = "Bíblia",
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(Color.Transparent)
-            )
-        }
+        Image(
+            painter = painterResource(id = if (isPlaying) R.drawable.pause else R.drawable.play),
+            contentDescription = if (isPlaying) "Pause" else "Play",
+            modifier = Modifier.size(56.dp)
+        )
     }
 }
 
