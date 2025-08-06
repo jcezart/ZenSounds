@@ -1,6 +1,5 @@
 package com.juliocezar.zensounds
 
-import android.graphics.fonts.FontStyle
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,16 +37,31 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ZenSoundsTheme { // Aplica o tema personalizado
-                ZenSoundsApp()
+                MainScreen()
             }
         }
     }
 }
 
 @Composable
-fun ZenSoundsApp(soundViewModel: SoundViewModel = viewModel(factory = SoundViewModelFactory(LocalContext.current))) {
-    val sounds by soundViewModel.sounds.collectAsState(initial = emptyList())
+fun MainScreen(soundViewModel: SoundViewModel = viewModel(factory = SoundViewModelFactory(LocalContext.current))) {
+    var selectedTab by remember { mutableStateOf(0) } // 0 para Sons
     val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(selectedTab) { tabIndex ->
+                selectedTab = tabIndex
+            }
+        }
+    ) { innerPadding ->
+        ZenSoundsApp(soundViewModel, innerPadding)
+    }
+}
+
+@Composable
+fun ZenSoundsApp(soundViewModel: SoundViewModel, innerPadding: PaddingValues) {
+    val sounds by soundViewModel.sounds.collectAsState(initial = emptyList())
 
     Column(
         modifier = Modifier
@@ -55,7 +69,7 @@ fun ZenSoundsApp(soundViewModel: SoundViewModel = viewModel(factory = SoundViewM
             .background(Color(0xFF0C1C2C))
             .padding(
                 top = 16.dp,
-                bottom = navigationBarPadding.calculateBottomPadding()
+                bottom = innerPadding.calculateBottomPadding() // Ajusta o padding da Scaffold
             )
     ) {
         // Título
@@ -97,9 +111,55 @@ fun ZenSoundsApp(soundViewModel: SoundViewModel = viewModel(factory = SoundViewM
         PlaybackControls(
             isPlaying = soundViewModel.isPlaying,
             onPlayPauseClick = { soundViewModel.onPlayPauseClicked() },
-            onPreviousClick = { soundViewModel.onPreviousClicked() },
-            onNextClick = { soundViewModel.onNextClicked() }
+            onPreviousClick = { },
+            onNextClick = { }
         )
+    }
+}
+
+@Composable
+fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF0C1C2C))
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .clickable { onTabSelected(0) }
+                .background(if (selectedTab == 0) Color(0xFF24364D) else Color(0xFF1A2B3D), shape = CircleShape)
+                .size(48.dp)
+                .padding(0.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.music),
+                contentDescription = "Sons",
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(Color.Transparent)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .clickable { onTabSelected(1) }
+                .background(if (selectedTab == 1) Color(0xFF24364D) else Color(0xFF1A2B3D), shape = CircleShape)
+                .size(48.dp)
+                .padding(0.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.bible),
+                contentDescription = "Bíblia",
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(Color.Transparent)
+            )
+        }
     }
 }
 
@@ -112,49 +172,107 @@ fun SoundCard(soundName: String, icon: String, isSelected: Boolean, onClick: () 
             .clickable { onClick() }
             .shadow(4.dp, RoundedCornerShape(16.dp))
             .border(1.dp, Color(0xFF24364D), RoundedCornerShape(16.dp))
-
     ) {
         // Fundo com imagem para "Rain" ou cor para os outros
-        if (soundName == "Rain") {
-            Image(
-                painter = painterResource(id = R.drawable.rain_card),
-                contentDescription = "Rain background",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        Color.Black.copy(alpha = 0.3f)), // Opacidade pra legibilidade
-                contentScale = ContentScale.Crop
-            )
-        } else if (soundName == "Rain & Thunder") {
-            Image(
-                painter = painterResource(id = R.drawable.rainthunder_card),
-                contentDescription = "Rain & Thunder background",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.Black.copy(alpha = 0.3f)),
-                contentScale = ContentScale.Crop
-            )
-        }  else if (soundName == "Wind") {
-            Image(
-                painter = painterResource(id = R.drawable.wind_card),
-                contentDescription = "Rain & Thunder background",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.Black.copy(alpha = 0.3f)),
-                contentScale = ContentScale.Crop
-            )
-        }else {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        color = if (isSelected) Color(0xFF24364D) else Color(0xFF1A2B3D),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-            )
+        when (soundName) {
+            "Rain" -> {
+                Image(
+                    painter = painterResource(id = R.drawable.rain_card),
+                    contentDescription = "Rain background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            "Rain & Thunder" -> {
+                Image(
+                    painter = painterResource(id = R.drawable.rainthunder_card),
+                    contentDescription = "Rain & Thunder background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            "Wind" -> {
+                Image(
+                    painter = painterResource(id = R.drawable.wind_card),
+                    contentDescription = "Wind background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            "Forest" -> {
+                Image(
+                    painter = painterResource(id = R.drawable.forest_card),
+                    contentDescription = "Forest background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            "Stream" -> {
+                Image(
+                    painter = painterResource(id = R.drawable.stream_card),
+                    contentDescription = "Stream background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            "Fireplace" -> {
+                Image(
+                    painter = painterResource(id = R.drawable.fireplace_card),
+                    contentDescription = "Fireplace background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            "TV Static" -> {
+                Image(
+                    painter = painterResource(id = R.drawable.tv_card),
+                    contentDescription = "TV background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            "Car Engine" -> {
+                Image(
+                    painter = painterResource(id = R.drawable.engine_card),
+                    contentDescription = "Car background",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            else -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = if (isSelected) Color(0xFF24364D) else Color(0xFF1A2B3D),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                )
+            }
         }
 
         // Conteúdo do cartão (ícone e texto)
@@ -168,7 +286,7 @@ fun SoundCard(soundName: String, icon: String, isSelected: Boolean, onClick: () 
             Text(
                 text = icon,
                 fontSize = 32.sp,
-                color = Color.White//if (soundName == "Rain") Color.White else Color(0xFF0C1C2C)
+                color = Color.White
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -176,7 +294,7 @@ fun SoundCard(soundName: String, icon: String, isSelected: Boolean, onClick: () 
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Cursive,
-                color = Color.White//if (soundName == "Rain") Color.White else Color(0xFF0C1C2C)
+                color = Color.White
             )
         }
     }
@@ -189,59 +307,25 @@ fun PlaybackControls(
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF0C1C2C))
             .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+        contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
-                .clickable(onClick = onPreviousClick)
-                .background(Color(0xFF1A2B3D), shape = CircleShape)
-                .size(48.dp)
-                .padding(0.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "⏪",
-                fontSize = 24.sp,
-                color = Color.White,
-                modifier = Modifier.background(Color.Transparent)
-            )
-        }
-
-        Box(
-            modifier = Modifier
                 .clickable(onClick = onPlayPauseClick)
-                .background(Color(0xFF1A2B3D), shape = CircleShape)
-                .size(56.dp)
                 .padding(0.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = if (isPlaying) "⏸️" else "▶️",
-                fontSize = 32.sp,
-                color = Color.White,
-                modifier = Modifier.background(Color.Transparent)
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .clickable(onClick = onNextClick)
-                .background(Color(0xFF1A2B3D), shape = CircleShape)
-                .size(48.dp)
-                .padding(0.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "⏩",
-                fontSize = 24.sp,
-                color = Color.White,
-                modifier = Modifier.background(Color.Transparent)
+            Image(
+                painter = painterResource(id = if (isPlaying) R.drawable.pause else R.drawable.play),
+                contentDescription = if (isPlaying) "Pause" else "Play",
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(Color.Transparent)
             )
         }
     }
