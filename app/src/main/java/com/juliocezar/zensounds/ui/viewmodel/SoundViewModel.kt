@@ -1,13 +1,13 @@
-package com.juliocezar.zensounds.viewmodel
+package com.juliocezar.zensounds.ui.viewmodel
 
 import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.juliocezar.zensounds.AppDatabase
-import com.juliocezar.zensounds.Sound
-import com.juliocezar.zensounds.SoundDao
+import com.juliocezar.zensounds.data.AppDatabase
+import com.juliocezar.zensounds.data.Sound
+import com.juliocezar.zensounds.data.SoundDao
 import com.juliocezar.zensounds.AudioPlayerManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
