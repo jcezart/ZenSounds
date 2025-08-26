@@ -1,4 +1,4 @@
-package com.juliocezar.zensounds
+package com.juliocezar.zensounds.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
