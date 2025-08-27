@@ -175,10 +175,10 @@ fun SoundCard(soundName: String, icon: String, isSelected: Boolean, onClick: () 
                     contentScale = ContentScale.Crop
                 )
             }
-            "Rain & Thunder" -> {
+            "Storm" -> {
                 Image(
                     painter = painterResource(id = R.drawable.rainthunder_card),
-                    contentDescription = "Rain & Thunder background",
+                    contentDescription = "Storm background",
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(16.dp))
