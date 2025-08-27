@@ -40,7 +40,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
             if (currentSounds.isEmpty()) {
                 val defaultSounds = listOf(
                     Sound(name = "Rain", icon = " ", filePath = "android.resource://${context.packageName}/raw/rain_sound", volume = 1.0f),
-                    Sound(name = "Rain & Thunder", icon = " ", filePath = "android.resource://${context.packageName}/raw/thunder_sound", volume = 1.0f),
+                    Sound(name = "Storm", icon = " ", filePath = "android.resource://${context.packageName}/raw/thunder_sound", volume = 1.0f),
                     Sound(name = "Wind", icon = " ", filePath = "android.resource://${context.packageName}/raw/wind_sound", volume = 1.0f),
                     Sound(name = "Forest", icon = " ", filePath = "android.resource://${context.packageName}/raw/forest_sound", volume = 1.0f),
                     Sound(name = "Stream", icon = " ", filePath = "android.resource://${context.packageName}/raw/stream_sound", volume = 1.0f),

@@ -61,6 +61,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.runtime)
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+
 
     implementation(libs.billing)
     implementation(libs.exoplayer)

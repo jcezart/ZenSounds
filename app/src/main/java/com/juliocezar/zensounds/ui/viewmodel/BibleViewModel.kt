@@ -15,21 +15,37 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.awaitResponse
+import java.util.Locale
 
 class BibleViewModel(private val context: Context) : ViewModel() {
 
     private val verseDao: VerseDao = AppDatabase.getDatabase(context).verseDao()
 
-    // O que a UI consome
     private val _bibleVerses = MutableStateFlow<List<Verse>>(emptyList())
     val bibleVerses: StateFlow<List<Verse>> get() = _bibleVerses
 
-    // Idioma atual (padrão pt). Os versos gravados usam este campo.
-    private var language: String = "pt"
+    //private var language: String = "en"
+    private val _language = MutableStateFlow(devicePreferredLanguage()) // "pt" ou "en"
+    val languageFlow: StateFlow<String> = _language
 
-    // ---------------------------
-    // Catálogo básico de livros
-    // ---------------------------
+    fun currentLanguage(): String = _language.value
+
+    /** Retorna "pt" ou "en" conforme o aparelho; se for outro idioma, padroniza "en". */
+    private fun devicePreferredLanguage(): String {
+        val lang = try {
+            val loc = context.resources.configuration.locales.get(0)
+            loc?.language ?: Locale.getDefault().language
+        } catch (_: Throwable) {
+            Locale.getDefault().language
+        }
+        return when (lang.lowercase()) {
+            "pt", "pt_br", "pt-pt", "pt-br" -> "pt"
+            "en", "en_us", "en_gb", "en-us", "en-gb" -> "en"
+            else -> "en"
+        }
+    }
+
+    // Catalogo básico (Pentateuco)
     data class BookMeta(
         val code: String,      // ex.: "GEN"
         val namePt: String,    // "Gênesis"
@@ -37,18 +53,16 @@ class BibleViewModel(private val context: Context) : ViewModel() {
         val chapters: Int      // 50
     )
 
-    // Pentateuco (expanda quando quiser)
-    val allBooks: List<BookMeta> = listOf(
-        BookMeta("GEN", "Gênesis",       "Genesis",      50),
-        BookMeta("EXO", "Êxodo",         "Exodus",       40),
-        BookMeta("LEV", "Levítico",      "Leviticus",    27),
-        BookMeta("NUM", "Números",       "Numbers",      36),
-        BookMeta("DEU", "Deuteronômio",  "Deuteronomy",  34)
+    val allBooks = listOf(
+        BookMeta("GEN", "Gênesis",      "Genesis",     50),
+        BookMeta("EXO", "Êxodo",        "Exodus",      40),
+        BookMeta("LEV", "Levítico",     "Leviticus",   27),
+        BookMeta("NUM", "Números",      "Numbers",     36),
+        BookMeta("DEU", "Deuteronômio", "Deuteronomy", 34),
     )
 
     fun bookByCode(code: String): BookMeta? = allBooks.find { it.code == code }
 
-    // Nome padronizado salvo no BD (usei inglês)
     private fun dbBookNameByCode(code: String): String? = when (code) {
         "GEN" -> "Genesis"
         "EXO" -> "Exodus"
@@ -58,58 +72,49 @@ class BibleViewModel(private val context: Context) : ViewModel() {
         else  -> null
     }
 
+    // ----> AJUSTE AQUI: usar idioma do aparelho e deixar o loadChapter cuidar do fallback
     init {
-        // Ao abrir: tenta exibir GEN 1 do BD (pt → en fallback) ou baixa se necessário.
         viewModelScope.launch {
-            val hasPt = verseDao.getVersesByLanguage("pt").isNotEmpty()
-            val hasEn = verseDao.getVersesByLanguage("en").isNotEmpty()
-            language = when {
-                hasPt -> "pt"
-                hasEn -> "en"
-                else  -> "pt"
-            }
-            loadChapter("GEN", 1)
+            _language.value = devicePreferredLanguage()       // "pt" ou "en" (ou "en" por padrão)
+            loadChapter("GEN", 1)                      // se a tradução não existir, loadChapter cai pra EN
         }
     }
 
+    /** Opcional: sincroniza manualmente com o idioma do aparelho e recarrega GEN 1 */
+    fun setLanguageFromDevice() {
+        setLanguage(devicePreferredLanguage())
+    }
+
     fun setLanguage(lang: String) {
-        language = lang
-        // Se quiser manter o capítulo atual, guarde estado externo. Aqui recarrego GEN 1.
+        _language.value = lang
         loadChapter("GEN", 1)
     }
 
     private fun translationFor(lang: String): String = when (lang) {
-        "pt" -> "por_blj"  // Ou outra opção portuguesa disponível
+        "pt" -> "por_blj"
         "en" -> "eng_kjv"
         else -> "eng_kjv"
     }
 
-    /**
-     * Carrega UM capítulo:
-     * 1) tenta do Room por (book, chapter, language)
-     * 2) se vazio, baixa só aquele capítulo e insere
-     * 3) atualiza a UI com o que ficou no Room
-     * 4) fallback para o outro idioma, se ainda assim estiver vazio
-     */
     fun loadChapter(bookCode: String, chapter: Int) {
         viewModelScope.launch {
             val dbName = dbBookNameByCode(bookCode) ?: return@launch
 
             // 1) Tenta no idioma atual (capítulo específico)
-            var verses = verseDao.getVersesByBookChapter(dbName, chapter, language)
+            var verses = verseDao.getVersesByBookChapter(dbName, chapter, _language.value)
             if (verses.isEmpty()) {
                 // 2) Se não tem, baixa e persiste nesse idioma
-                fetchAndInsertChapter(bookCode, chapter, language)
-                verses = verseDao.getVersesByBookChapter(dbName, chapter, language)
+                fetchAndInsertChapter(bookCode, chapter, _language.value)
+                verses = verseDao.getVersesByBookChapter(dbName, chapter, _language.value)
             }
 
             // 3) Fallback (pt <-> en) se ainda vazio
             if (verses.isEmpty()) {
-                val altLang = if (language == "pt") "en" else "pt"
+                val altLang = if (_language.value == "pt") "en" else "pt"
                 fetchAndInsertChapter(bookCode, chapter, altLang)
                 val alt = verseDao.getVersesByBookChapter(dbName, chapter, altLang)
                 if (alt.isNotEmpty()) {
-                    language = altLang
+                    _language.value = altLang
                     verses = alt
                 }
             }
@@ -123,8 +128,7 @@ class BibleViewModel(private val context: Context) : ViewModel() {
         chapter: Int,
         targetLang: String
     ) {
-        // Chama a API correta (com /api/ e IDs novos de tradução)
-        val translationId = translationFor(targetLang) // ex.: "por_blj" | "eng_kjv"
+        val translationId = translationFor(targetLang)
         val resp = runCatching {
             RetrofitClient.bibleService.getChapter(translationId, bookCode, chapter).awaitResponse()
         }.getOrNull()
@@ -133,9 +137,9 @@ class BibleViewModel(private val context: Context) : ViewModel() {
         val root = resp.body() ?: return
         if (!root.isJsonObject) return
 
-        val obj = root.asJsonObject
-        val chapterObj = obj.getAsJsonObject("chapter") ?: return
-        val content = chapterObj.getAsJsonArray("content") ?: return
+        val obj: JsonObject = root.asJsonObject
+        val chapterObj: JsonObject = obj.getAsJsonObject("chapter") ?: return
+        val content: JsonArray = chapterObj.getAsJsonArray("content") ?: return
 
         val dbBook = dbBookNameByCode(bookCode) ?: return
 
