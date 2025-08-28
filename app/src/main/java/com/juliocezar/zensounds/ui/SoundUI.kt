@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -73,8 +77,14 @@ fun ZenSoundsApp(soundViewModel: SoundViewModel, innerPadding: PaddingValues) {
                 top = 16.dp,
                 bottom = innerPadding.calculateBottomPadding() // Usa o padding da Scaffold pra ajustar
             )
-            .systemBarsPadding() // Adiciona padding pra barras do sistema
+            .systemBarsPadding()
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .displayCutoutPadding(),
     ) {
+        BannerAd(modifier = Modifier.fillMaxWidth())
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Título
         Text(
             text = "ZenSounds",

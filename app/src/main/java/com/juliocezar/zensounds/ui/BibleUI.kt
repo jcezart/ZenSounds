@@ -46,12 +46,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 import com.juliocezar.zensounds.R
 import com.juliocezar.zensounds.ui.viewmodel.BibleViewModel
 import com.juliocezar.zensounds.ui.viewmodel.BibleViewModelFactory
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 
 enum class Stage { Books, Chapters, Verses }
 
@@ -84,9 +94,15 @@ fun BibleScreen(
             .fillMaxSize()
             .background(Color(0xFF0C1C2C))
             .padding(top = 16.dp, bottom = innerPadding.calculateBottomPadding())
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .displayCutoutPadding()
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        BannerAd(modifier = Modifier.fillMaxWidth())
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         val title = when (stage) {
             Stage.Books -> "Books"
             Stage.Chapters -> selectedBookName ?: "Chapters"
@@ -412,4 +428,32 @@ fun BottomNavigationBar(
                 })
         }
     }
+}
+
+@Composable
+fun BannerAd(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val adView = remember { AdView(context) }
+    val adUnitId = "ca-app-pub-5167159527096735/1656937187" //ID real
+    //val adUnitId = "ca-app-pub-3940256099942544/9214589741" //ID de teste
+
+    AndroidView(
+        modifier = modifier,
+        factory = { adView },
+        update = { view ->
+            view.adUnitId = adUnitId
+            view.setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, 320))
+            val adRequest = AdRequest.Builder().build()
+            view.loadAd(adRequest)
+
+            view.adListener = object : AdListener() {
+                override fun onAdLoaded() {
+                    // Anúncio carregado
+                }
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    // Erro no carregamento
+                }
+            }
+        }
+    )
 }

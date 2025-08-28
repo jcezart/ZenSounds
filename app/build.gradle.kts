@@ -81,4 +81,16 @@ dependencies {
 
     // Coroutines para operações assíncronas
     implementation(libs.kotlinx.coroutines.android)
+
+    // --- Jetpack DataStore (preferências, p/ salvar entitlement Pro) ---
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
+
+
+    // --- Coroutines (p/ Billing + DataStore + AudioPlayerManager) ---
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // AdMob
+    implementation("com.google.android.gms:play-services-ads:24.5.0")
+    implementation("com.google.android.ump:user-messaging-platform:3.1.0")
 }
