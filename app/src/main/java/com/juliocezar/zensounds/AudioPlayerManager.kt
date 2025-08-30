@@ -183,4 +183,13 @@ class AudioPlayerManager(context: Context) {
         player2.release()
         println("DEBUG: Released players")
     }
+
+    fun setVolume(newVolume: Float) {
+        currentVolume = newVolume.coerceIn(0.0f, 1.0f)
+        if (isPlayer1Active) {
+            player1.volume = currentVolume
+        } else {
+            player2.volume = currentVolume
+        }
+    }
 }

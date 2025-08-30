@@ -1,120 +1,217 @@
+// Substitua TODO o conteúdo do seu SoundViewModel.kt por este código
+
 package com.juliocezar.zensounds.ui.viewmodel
 
+import android.content.ComponentName
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
+import android.net.Uri
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.MoreExecutors
+import com.juliocezar.zensounds.R
 import com.juliocezar.zensounds.data.AppDatabase
-import com.juliocezar.zensounds.data.Sound
+import com.juliocezar.zensounds.data.Sound as SoundEntity
 import com.juliocezar.zensounds.data.SoundDao
-import com.juliocezar.zensounds.AudioPlayerManager
-import kotlinx.coroutines.flow.Flow
+import com.juliocezar.zensounds.services.PlaybackService
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
+data class Sound(
+    val name: String,
+    val backgroundResId: Int
+)
+
+data class SoundCategory(
+    val title: String,
+    val sounds: List<Sound>
+)
+
 class SoundViewModel(private val context: Context) : ViewModel() {
     private val soundDao: SoundDao
-    private val audioPlayerManager: AudioPlayerManager
-    private val _isPlaying = mutableStateOf(false)
-    val isPlaying: Boolean get() = _isPlaying.value
+    private var mediaController: MediaController? = null
+    private var progressJob: Job? = null
 
-    private val _selectedSound = mutableStateOf("")
-    val selectedSound: String get() = _selectedSound.value
+    private val _playbackProgress = MutableStateFlow(0f)
+    val playbackProgress: StateFlow<Float> = _playbackProgress.asStateFlow()
 
-    val sounds: Flow<List<Sound>>
+    private val _volume = MutableStateFlow(1f)
+    val volume: StateFlow<Float> = _volume.asStateFlow()
+
+    private val _isPlaying = MutableStateFlow(false)
+    val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
+
+    private val _selectedSound = MutableStateFlow<String?>(null)
+    val selectedSound: StateFlow<String?> = _selectedSound.asStateFlow()
+
+    private val _soundCategories = MutableStateFlow<List<SoundCategory>>(emptyList())
+    val soundCategories: StateFlow<List<SoundCategory>> = _soundCategories.asStateFlow()
 
     init {
         val database = AppDatabase.getDatabase(context)
         soundDao = database.soundDao()
-        sounds = soundDao.getAllSounds()
-        audioPlayerManager = AudioPlayerManager(context)
+        initializeSoundsInDb()
 
-        initializeSounds()
+        viewModelScope.launch {
+            soundDao.getAllSounds().collect { soundEntities ->
+                _soundCategories.value = mapToUiCategories(soundEntities)
+            }
+        }
+
+        val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+        val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
+        controllerFuture.addListener({
+            mediaController = controllerFuture.get()
+            setupPlayerListener()
+        }, MoreExecutors.directExecutor())
     }
 
-    private fun initializeSounds() {
+    private fun setupPlayerListener() {
+        mediaController?.addListener(object : Player.Listener {
+            override fun onIsPlayingChanged(isPlayingValue: Boolean) {
+                _isPlaying.value = isPlayingValue
+            }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                _selectedSound.value = mediaItem?.mediaMetadata?.title?.toString()
+            }
+        })
+
+        progressJob?.cancel()
+        progressJob = viewModelScope.launch {
+            while (true) {
+                val player = mediaController
+                if (player?.isPlaying == true) {
+                    val duration = player.duration
+                    val position = player.currentPosition
+                    if (duration > 0 && duration != C.TIME_UNSET) {
+                        _playbackProgress.value = position.toFloat() / duration.toFloat()
+                    }
+                }
+                delay(200)
+            }
+        }
+    }
+
+    // --- SUA LÓGICA DE DADOS ORIGINAL (INTACTA) ---
+    private fun mapToUiCategories(entities: List<SoundEntity>): List<SoundCategory> {
+        val uiSounds = entities.map { entity ->
+            Sound(
+                name = entity.name,
+                backgroundResId = getBackgroundForSound(entity.name)
+            )
+        }
+        return listOf(
+            SoundCategory("Sons da Natureza", uiSounds.filter { it.name in listOf("Rain", "Storm", "Wind", "Forest", "Stream") }),
+            SoundCategory("Objetos", uiSounds.filter { it.name in listOf("Fireplace", "TV Static") }),
+            SoundCategory("Veículos", uiSounds.filter { it.name == "Car Engine" })
+        ).filter { it.sounds.isNotEmpty() }
+    }
+
+    private fun getBackgroundForSound(soundName: String): Int = when (soundName) {
+        "Rain" -> R.drawable.rain_card; "Storm" -> R.drawable.rainthunder_card; "Wind" -> R.drawable.wind_card
+        "Forest" -> R.drawable.forest_card; "Stream" -> R.drawable.stream_card; "Fireplace" -> R.drawable.fireplace_card
+        "TV Static" -> R.drawable.tv_card; "Car Engine" -> R.drawable.engine_card
+        else -> R.drawable.placeholder_card
+    }
+
+    private fun initializeSoundsInDb() {
         viewModelScope.launch {
-            val currentSounds = soundDao.getAllSounds().firstOrNull() ?: emptyList()
-            //soundDao.deleteAllSounds()
-            if (currentSounds.isEmpty()) {
+            if (soundDao.getSoundCount() == 0) {
                 val defaultSounds = listOf(
-                    Sound(name = "Rain", icon = " ", filePath = "android.resource://${context.packageName}/raw/rain_sound", volume = 1.0f),
-                    Sound(name = "Storm", icon = " ", filePath = "android.resource://${context.packageName}/raw/thunder_sound", volume = 1.0f),
-                    Sound(name = "Wind", icon = " ", filePath = "android.resource://${context.packageName}/raw/wind_sound", volume = 1.0f),
-                    Sound(name = "Forest", icon = " ", filePath = "android.resource://${context.packageName}/raw/forest_sound", volume = 1.0f),
-                    Sound(name = "Stream", icon = " ", filePath = "android.resource://${context.packageName}/raw/stream_sound", volume = 1.0f),
-                    Sound(name = "Fireplace", icon = " ", filePath = "android.resource://${context.packageName}/raw/fire_sound", volume = 1.0f),
-                    Sound(name = "TV Static", icon = " ", filePath = "android.resource://${context.packageName}/raw/tv_sound", volume = 0.1f),
-                    Sound(name = "Car Engine", icon = " ", filePath = "android.resource://${context.packageName}/raw/car_sound", volume = 1.0f)
+                    SoundEntity(name = "Rain", filePath = "android.resource://${context.packageName}/${R.raw.rain_sound}", volume = 1.0f),
+                    SoundEntity(name = "Storm", filePath = "android.resource://${context.packageName}/${R.raw.thunder_sound}", volume = 1.0f),
+                    SoundEntity(name = "Wind", filePath = "android.resource://${context.packageName}/${R.raw.wind_sound}", volume = 1.0f),
+                    SoundEntity(name = "Forest", filePath = "android.resource://${context.packageName}/${R.raw.forest_sound}", volume = 1.0f),
+                    SoundEntity(name = "Stream", filePath = "android.resource://${context.packageName}/${R.raw.stream_sound}", volume = 1.0f),
+                    SoundEntity(name = "Fireplace", filePath = "android.resource://${context.packageName}/${R.raw.fire_sound}", volume = 1.0f),
+                    SoundEntity(name = "TV Static", filePath = "android.resource://${context.packageName}/${R.raw.tv_sound}", volume = 0.1f),
+                    SoundEntity(name = "Car Engine", filePath = "android.resource://${context.packageName}/${R.raw.car_sound}", volume = 1.0f)
                 )
                 soundDao.insertSounds(defaultSounds)
             }
         }
     }
 
+    // --- FUNÇÕES DE CONTROLE REFATORADAS PARA USAR O MEDIACONTROLLER ---
+
     fun onSoundClicked(soundName: String) {
         viewModelScope.launch {
-            val sound = sounds.firstOrNull()?.find { it.name == soundName } ?: return@launch
-            if (_selectedSound.value == soundName && _isPlaying.value) {
-                _isPlaying.value = false
-                audioPlayerManager.pause()
+            val soundEntity = soundDao.getAllSounds().firstOrNull()?.find { it.name == soundName } ?: return@launch
+            val player = mediaController ?: return@launch
+
+            if (player.currentMediaItem?.mediaMetadata?.title == soundName && player.isPlaying) {
+                player.pause()
             } else {
-                _selectedSound.value = soundName
-                _isPlaying.value = true
-                audioPlayerManager.playSound(sound.filePath, sound.volume, overlapDurationMs = 18000) // Aumentado para 18 segundos
+                val mediaItem = MediaItem.Builder()
+                    .setUri(Uri.parse(soundEntity.filePath))
+                    .setMediaId(soundEntity.name)
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setTitle(soundEntity.name)
+                            .setArtworkUri(Uri.parse("android.resource://${context.packageName}/${getBackgroundForSound(soundEntity.name)}"))
+                            .build()
+                    )
+                    .build()
+
+                player.setMediaItem(mediaItem)
+                player.prepare()
+                player.play()
             }
         }
     }
 
     fun onPlayPauseClicked() {
-        if (_isPlaying.value) {
-            _isPlaying.value = false
-            audioPlayerManager.pause()
-        } else {
-            _isPlaying.value = true
-            audioPlayerManager.resume()
+        mediaController?.let {
+            if (it.isPlaying) it.pause() else it.play()
         }
     }
 
     fun onPreviousClicked() {
         viewModelScope.launch {
-            val currentSounds = sounds.firstOrNull() ?: return@launch
-            val currentIndex = currentSounds.indexOfFirst { it.name == _selectedSound.value }
-            if (currentIndex > 0) {
-                val previousSound = currentSounds[currentIndex - 1]
-                _selectedSound.value = previousSound.name
-                _isPlaying.value = true
-                audioPlayerManager.playSound(previousSound.filePath, previousSound.volume, overlapDurationMs = 18000) // Aumentado para 18 segundos
-            }
+            val allSounds = soundDao.getAllSounds().firstOrNull() ?: return@launch
+            if (allSounds.isEmpty()) return@launch
+
+            val currentIndex = allSounds.indexOfFirst { it.name == _selectedSound.value }
+            val previousIndex = if (currentIndex <= 0) allSounds.size - 1 else currentIndex - 1
+            val previousSound = allSounds[previousIndex]
+
+            // Reutiliza a lógica de onSoundClicked para tocar o som anterior
+            onSoundClicked(previousSound.name)
         }
     }
 
     fun onNextClicked() {
         viewModelScope.launch {
-            val currentSounds = sounds.firstOrNull() ?: return@launch
-            val currentIndex = currentSounds.indexOfFirst { it.name == _selectedSound.value }
-            if (currentIndex < currentSounds.size - 1) {
-                val nextSound = currentSounds[currentIndex + 1]
-                _selectedSound.value = nextSound.name
-                _isPlaying.value = true
-                audioPlayerManager.playSound(nextSound.filePath, nextSound.volume, overlapDurationMs = 18000) // Aumentado para 18 segundos
-            }
+            val allSounds = soundDao.getAllSounds().firstOrNull() ?: return@launch
+            if (allSounds.isEmpty()) return@launch
+
+            val currentIndex = allSounds.indexOfFirst { it.name == _selectedSound.value }
+            val nextIndex = if (currentIndex == -1 || currentIndex == allSounds.size - 1) 0 else currentIndex + 1
+            val nextSound = allSounds[nextIndex]
+
+            // Reutiliza a lógica de onSoundClicked para tocar o próximo som
+            onSoundClicked(nextSound.name)
         }
+    }
+
+    fun onVolumeChanged(newVolume: Float) {
+        _volume.value = newVolume
+        mediaController?.volume = newVolume
     }
 
     override fun onCleared() {
         super.onCleared()
-        audioPlayerManager.release()
-    }
-}
-
-class SoundViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SoundViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return SoundViewModel(context) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        mediaController?.release()
     }
 }

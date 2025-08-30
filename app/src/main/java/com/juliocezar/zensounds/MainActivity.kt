@@ -1,12 +1,11 @@
 package com.juliocezar.zensounds
 
+import android.content.Intent
 import android.os.Bundle
-import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.view.WindowCompat
-import android.view.WindowInsets
 import com.google.android.gms.ads.MobileAds
+import com.juliocezar.zensounds.services.PlaybackService
 import com.juliocezar.zensounds.ui.theme.ZenSoundsTheme
 import com.juliocezar.zensounds.ui.MainScreen
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +19,8 @@ import com.google.android.ump.FormError
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        startService(Intent(this, PlaybackService::class.java))
 
         setContent {
             ZenSoundsTheme {
@@ -43,14 +43,6 @@ class MainActivity : ComponentActivity() {
                 initializeAds()
             }
         )
-
-        window.decorView.post {
-            window.insetsController?.let { controller ->
-                controller.hide(WindowInsets.Type.systemBars())
-                controller.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        }
     }
 
     private fun loadForm(consentInformation: ConsentInformation) {
