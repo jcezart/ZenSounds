@@ -58,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.juliocezar.zensounds.ui.BannerAd
 import com.juliocezar.zensounds.ui.viewmodel.Sound
 import com.juliocezar.zensounds.ui.viewmodel.SoundViewModel
 
@@ -166,7 +167,9 @@ fun SoundPlayerScreen(
             }
 
             Spacer(modifier = Modifier.weight(0.5f))
-
+            //Spacer(modifier = Modifier.height(16.dp))
+            BannerAd(modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = playingSoundObject?.name ?: "Carregando...",
                 fontSize = 16.sp,
