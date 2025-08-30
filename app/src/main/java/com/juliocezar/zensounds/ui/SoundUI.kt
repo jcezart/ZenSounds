@@ -186,7 +186,7 @@ fun ZenSoundsApp(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFB0C4D4)
                 )
-                Spacer(modifier = Modifier.weight(1f)) // Empurra o ícone para a direita
+                Spacer(modifier = Modifier.weight(1f))
                 IconButton(onClick = { /* Ação de configuração aqui */ }) {
                     Icon(
                         imageVector = Icons.Filled.Settings,
