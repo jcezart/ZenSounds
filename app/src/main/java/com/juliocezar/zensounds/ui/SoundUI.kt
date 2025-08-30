@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -168,21 +173,28 @@ fun ZenSoundsApp(
             .padding(innerPadding)
     ) {
         item {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                ZenSoundsBannerAd(modifier = Modifier
+            Row(
+                modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp))
-                Spacer(modifier = Modifier.height(16.dp))
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = "ZenSounds",
                     fontSize = 42.sp,
                     fontFamily = FontFamily.Cursive,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFB0C4D4),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                    color = Color(0xFFB0C4D4)
                 )
+                Spacer(modifier = Modifier.weight(1f)) // Empurra o ícone para a direita
+                IconButton(onClick = { /* Ação de configuração aqui */ }) {
+                    Icon(
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = "Configurações",
+                        tint = Color(0xFFB0C4D4),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
 
@@ -202,6 +214,13 @@ fun ZenSoundsApp(
             )
         }
 
+        item {
+            ZenSoundsBannerAd(
+                modifier = Modifier
+                .fillMaxWidth()
+                .padding(all = 16.dp))
+        }
+
         items(soundCategories) { category ->
             SoundCategoryRow(
                 category = category,
@@ -211,6 +230,14 @@ fun ZenSoundsApp(
                 }
             )
         }
+
+        item {
+            ZenSoundsBannerAd(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp))
+        }
+
 
         item {
             Spacer(modifier = Modifier.height(32.dp))
