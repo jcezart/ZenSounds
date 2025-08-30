@@ -1,5 +1,3 @@
-// Substitua TODO o conteúdo do seu SoundViewModel.kt por este código
-
 package com.juliocezar.zensounds.ui.viewmodel
 
 import android.content.ComponentName
@@ -112,9 +110,9 @@ class SoundViewModel(private val context: Context) : ViewModel() {
             )
         }
         return listOf(
-            SoundCategory("Sons da Natureza", uiSounds.filter { it.name in listOf("Rain", "Storm", "Wind", "Forest", "Stream") }),
-            SoundCategory("Objetos", uiSounds.filter { it.name in listOf("Fireplace", "TV Static") }),
-            SoundCategory("Veículos", uiSounds.filter { it.name == "Car Engine" })
+            SoundCategory("Nature Sounds", uiSounds.filter { it.name in listOf("Rain", "Storm", "Wind", "Forest", "Stream") }),
+            SoundCategory("Object Sounds", uiSounds.filter { it.name in listOf("Fireplace", "TV Static") }),
+            SoundCategory("Vehicle Sounds", uiSounds.filter { it.name == "Car Engine" })
         ).filter { it.sounds.isNotEmpty() }
     }
 
