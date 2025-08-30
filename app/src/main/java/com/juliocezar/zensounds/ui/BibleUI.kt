@@ -62,13 +62,20 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.res.painterResource
+import com.juliocezar.zensounds.ui.viewmodel.SoundViewModel
 
 enum class Stage { Books, Chapters, Verses }
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
 fun BibleScreen(
-    soundViewModel1: com.juliocezar.zensounds.ui.viewmodel.SoundViewModel,
+    soundViewModel1: SoundViewModel,
     navController: NavHostController,
     innerPadding: PaddingValues
 ) {
@@ -366,66 +373,7 @@ private fun VerseList(
                     }
                 }
             }
-
-            item { Spacer(Modifier.height(8.dp)) } // respiro no fim da lista
-        }
-    }
-}
-
-
-@Composable
-fun BottomNavigationBar(
-    navController: NavHostController,
-    isPlaying: Boolean,
-    onPlayPauseClick: () -> Unit,
-) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: "zenSounds"
-    val selectedTab = when (currentRoute) {
-        "zenSounds" -> 0
-        "bible" -> 1
-        else -> 0
-    }
-
-    Surface(
-        tonalElevation = 4.dp,
-        shadowElevation = 6.dp,
-        color = Color(0xFF0C1C2C),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(72.dp)
-            .border(1.dp, Color(0xFF1A2B3D))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BottomNavItem(
-                iconId = R.drawable.music,
-                isSelected = selectedTab == 0,
-                onClick = {
-                    navController.navigate("zenSounds") {
-                        launchSingleTop = true
-                        popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                    }
-                }
-            )
-            PlayPauseButton(
-                isPlaying = isPlaying,
-                onClick = onPlayPauseClick
-            )
-            BottomNavItem(
-                iconId = R.drawable.bible,
-                isSelected = selectedTab == 1,
-                onClick = {
-                    navController.navigate("bible") {
-                        launchSingleTop = true
-                        popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                    }
-                })
+            item { Spacer(Modifier.height(8.dp)) }
         }
     }
 }
@@ -434,8 +382,8 @@ fun BottomNavigationBar(
 fun BannerAd(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val adView = remember { AdView(context) }
-    val adUnitId = "ca-app-pub-5167159527096735/1656937187" //ID real
-    //val adUnitId = "ca-app-pub-3940256099942544/9214589741" //ID de teste
+    //val adUnitId = "ca-app-pub-5167159527096735/1656937187" //ID real
+    val adUnitId = "ca-app-pub-3940256099942544/9214589741" //ID de teste
 
     AndroidView(
         modifier = modifier,
@@ -456,4 +404,43 @@ fun BannerAd(modifier: Modifier = Modifier) {
             }
         }
     )
+}
+
+@Composable
+fun BottomNavItem(
+    iconId: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val tint = if (isSelected) Color(0xFF89CFF0) else Color.Gray
+
+    IconButton(onClick = onClick) {
+        Icon(
+            painter = painterResource(id = iconId),
+            contentDescription = null, // A descrição deve ser mais específica se necessário
+            tint = tint,
+            modifier = Modifier.size(28.dp)
+        )
+    }
+}
+
+@Composable
+fun PlayPauseButton(
+    isPlaying: Boolean,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(Color(0xFF89CFF0))
+    ) {
+        Icon(
+            imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            contentDescription = if (isPlaying) "Pause" else "Play",
+            tint = Color.Black,
+            modifier = Modifier.size(36.dp)
+        )
+    }
 }

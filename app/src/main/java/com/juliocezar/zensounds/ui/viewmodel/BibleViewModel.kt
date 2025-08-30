@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonArray
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.juliocezar.zensounds.api.RetrofitClient
 import com.juliocezar.zensounds.data.AppDatabase
@@ -24,13 +23,11 @@ class BibleViewModel(private val context: Context) : ViewModel() {
     private val _bibleVerses = MutableStateFlow<List<Verse>>(emptyList())
     val bibleVerses: StateFlow<List<Verse>> get() = _bibleVerses
 
-    //private var language: String = "en"
     private val _language = MutableStateFlow(devicePreferredLanguage()) // "pt" ou "en"
     val languageFlow: StateFlow<String> = _language
 
     fun currentLanguage(): String = _language.value
 
-    /** Retorna "pt" ou "en" conforme o aparelho; se for outro idioma, padroniza "en". */
     private fun devicePreferredLanguage(): String {
         val lang = try {
             val loc = context.resources.configuration.locales.get(0)
@@ -45,7 +42,6 @@ class BibleViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    // Catalogo básico (Pentateuco)
     data class BookMeta(
         val code: String,      // ex.: "GEN"
         val namePt: String,    // "Gênesis"
@@ -72,15 +68,13 @@ class BibleViewModel(private val context: Context) : ViewModel() {
         else  -> null
     }
 
-    // ----> AJUSTE AQUI: usar idioma do aparelho e deixar o loadChapter cuidar do fallback
     init {
         viewModelScope.launch {
-            _language.value = devicePreferredLanguage()       // "pt" ou "en" (ou "en" por padrão)
-            loadChapter("GEN", 1)                      // se a tradução não existir, loadChapter cai pra EN
+            _language.value = devicePreferredLanguage()
+            loadChapter("GEN", 1)
         }
     }
 
-    /** Opcional: sincroniza manualmente com o idioma do aparelho e recarrega GEN 1 */
     fun setLanguageFromDevice() {
         setLanguage(devicePreferredLanguage())
     }
@@ -100,15 +94,12 @@ class BibleViewModel(private val context: Context) : ViewModel() {
         viewModelScope.launch {
             val dbName = dbBookNameByCode(bookCode) ?: return@launch
 
-            // 1) Tenta no idioma atual (capítulo específico)
             var verses = verseDao.getVersesByBookChapter(dbName, chapter, _language.value)
             if (verses.isEmpty()) {
-                // 2) Se não tem, baixa e persiste nesse idioma
                 fetchAndInsertChapter(bookCode, chapter, _language.value)
                 verses = verseDao.getVersesByBookChapter(dbName, chapter, _language.value)
             }
 
-            // 3) Fallback (pt <-> en) se ainda vazio
             if (verses.isEmpty()) {
                 val altLang = if (_language.value == "pt") "en" else "pt"
                 fetchAndInsertChapter(bookCode, chapter, altLang)

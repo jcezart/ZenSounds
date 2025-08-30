@@ -10,6 +10,9 @@ interface SoundDao {
     @Query("SELECT * FROM sounds")
     fun getAllSounds(): Flow<List<Sound>>
 
+    @Query("SELECT COUNT(*) FROM sounds")
+    suspend fun getSoundCount(): Int
+
     @Insert
     suspend fun insertSounds(sounds: List<Sound>)
 

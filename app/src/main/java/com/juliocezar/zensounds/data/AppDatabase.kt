@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Sound::class, Verse::class], version = 5, exportSchema = false)
+@Database(entities = [Sound::class, Verse::class], version = 6, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun soundDao(): SoundDao
     abstract fun verseDao(): VerseDao
@@ -55,6 +55,15 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_verses_book_chapter_verseNumber_language " +
+                            "ON verses(book, chapter, verseNumber, language)"
+                )
+            }
+        }
+
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS index_verses_book_chapter_verseNumber_language " +

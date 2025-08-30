@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ZenSounds</string>
+    <string name="notification_channel_name">Reprodução de Áudio ZenSounds</string>
+    <string name="notification_channel_description">Notificação para controlar a reprodução de áudio em segundo plano do ZenSounds.</string>
 </resources>
