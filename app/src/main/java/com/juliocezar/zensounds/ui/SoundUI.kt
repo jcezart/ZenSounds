@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,11 +47,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 import com.juliocezar.zensounds.R
 import com.juliocezar.zensounds.ui.viewmodel.CarouselItem
 import com.juliocezar.zensounds.ui.viewmodel.SoundCategory
@@ -155,9 +162,9 @@ fun ZenSoundsApp(
     val selectedSoundName by soundViewModel.selectedSound.collectAsState()
 
     val carouselItems = listOf(
-        CarouselItem("Versículos Inspiradores", R.drawable.promo_1),
-        CarouselItem("Histórias de Fé", R.drawable.promo_2),
-        CarouselItem("Jornada Espiritual", R.drawable.promo_3)
+        CarouselItem("Bible Versicles", R.drawable.promo_1),
+        CarouselItem("Coming Soon", R.drawable.promo_2),
+        CarouselItem("Coming Soon", R.drawable.promo_3)
     )
 
     LazyColumn(
@@ -316,9 +323,28 @@ fun SoundCard(sound: com.juliocezar.zensounds.ui.viewmodel.Sound, isSelected: Bo
 
 @Composable
 fun ZenSoundsBannerAd(modifier: Modifier = Modifier) {
-    Box(modifier
-        .height(50.dp)
-        .background(Color.Gray), contentAlignment = Alignment.Center){
-        Text("Espaço para o Banner Ad", color = Color.White)
-    }
+    val context = LocalContext.current
+    val adView = remember { AdView(context) }
+    //val adUnitId = "ca-app-pub-5167159527096735/1656937187" //ID real
+    val adUnitId = "ca-app-pub-3940256099942544/9214589741" //ID de teste
+
+    AndroidView(
+        modifier = modifier,
+        factory = { adView },
+        update = { view ->
+            view.adUnitId = adUnitId
+            view.setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, 320))
+            val adRequest = AdRequest.Builder().build()
+            view.loadAd(adRequest)
+
+            view.adListener = object : AdListener() {
+                override fun onAdLoaded() {
+                    // Anúncio carregado
+                }
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    // Erro no carregamento
+                }
+            }
+        }
+    )
 }

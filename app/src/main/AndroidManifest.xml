@@ -21,7 +21,9 @@
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-5167159527096735~2031539378"/>
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
+        <!--android:value="ca-app-pub-3940256099942544~3347511713" ID de teste-->
+        <!--android:value="ca-app-pub-5167159527096735~2031539378" ID de produção-->
 
         <activity
             android:name=".MainActivity"
