@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,8 +63,6 @@ import com.juliocezar.zensounds.ui.BannerAd
 import com.juliocezar.zensounds.ui.viewmodel.Sound
 import com.juliocezar.zensounds.ui.viewmodel.SoundViewModel
 
-// Substitua sua função SoundPlayerScreen por esta
-
 @Composable
 fun SoundPlayerScreen(
     navController: NavController,
@@ -80,12 +79,18 @@ fun SoundPlayerScreen(
 
     val playingSoundObject = availableSounds.find { it.name == currentSound }
     var showVolumeSlider by remember { mutableStateOf(false) }
+    var hasInitialized by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(initialSoundName) {
-        if (currentSound != initialSoundName) {
-            soundViewModel.onSoundClicked(initialSoundName)
-        } else if (!isPlaying) {
-            soundViewModel.onPlayPauseClicked()
+        if (!hasInitialized || currentSound != initialSoundName) {
+            Log.d("SoundPlayerScreen", "LaunchedEffect triggered: initialSoundName=$initialSoundName, currentSound=$currentSound, isPlaying=$isPlaying")
+            if (currentSound != initialSoundName) {
+                soundViewModel.onSoundClicked(initialSoundName)
+            } else if (!isPlaying) {
+                soundViewModel.onPlayPauseClicked()
+            }
+            hasInitialized = true
         }
     }
 
@@ -104,7 +109,6 @@ fun SoundPlayerScreen(
                 .safeDrawingPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -128,7 +132,6 @@ fun SoundPlayerScreen(
                     modifier = Modifier.weight(1f)
                 )
 
-                // --- MUDANÇA 1: Controle de Volume com Slider Horizontal Flutuante ---
                 Box {
                     IconButton(onClick = { showVolumeSlider = true }) {
                         Icon(
@@ -141,12 +144,12 @@ fun SoundPlayerScreen(
                     DropdownMenu(
                         expanded = showVolumeSlider,
                         onDismissRequest = { showVolumeSlider = false },
-                        modifier = Modifier.background(Color(0xFF2C3E50)) // Cor de fundo mais escura
+                        modifier = Modifier.background(Color(0xFF2C3E50))
                     ) {
                         Row(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
-                                .width(200.dp), // Largura do slider
+                                .width(200.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
@@ -167,11 +170,10 @@ fun SoundPlayerScreen(
             }
 
             Spacer(modifier = Modifier.weight(0.5f))
-            //Spacer(modifier = Modifier.height(16.dp))
             BannerAd(modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = playingSoundObject?.name ?: "Carregando...",
+                text = playingSoundObject?.name ?: "Loading...",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Light,
                 color = Color.Gray,
@@ -180,29 +182,36 @@ fun SoundPlayerScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Capa do Som
             Box(
-                // --- MUDANÇA 3: Tamanho da Capa Reduzido ---
                 modifier = Modifier
-                    .fillMaxWidth(0.7f) // Reduzido para 70%
+                    .fillMaxWidth(0.7f)
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(16.dp)) // Bordas um pouco menos arredondadas
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFF1E2F46)),
                 contentAlignment = Alignment.Center
             ) {
-                if (playingSoundObject != null) {
-                    Image(
-                        painter = painterResource(id = playingSoundObject.backgroundResId),
-                        contentDescription = "Capa do som",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
+                when {
+                    playingSoundObject != null -> {
+                        Image(
+                            painter = painterResource(id = playingSoundObject.backgroundResId),
+                            contentDescription = "Capa do som",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                    else -> {
+                        Text(
+                            text = "Carregando imagem...",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f)) // Espaço maior embaixo, empurrando tudo para cima
+            Spacer(modifier = Modifier.weight(1f))
 
-            // Controles Inferiores (agora mais para cima na tela)
             Column(
                 modifier = Modifier.padding(bottom = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally

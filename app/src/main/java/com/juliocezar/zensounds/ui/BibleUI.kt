@@ -326,7 +326,8 @@ private fun VerseList(
 fun BannerAd(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val adView = remember { AdView(context) }
-    val adUnitId = "ca-app-pub-3940256099942544/9214589741" //ID de teste
+    //val adUnitId = "ca-app-pub-3940256099942544/9214589741" //ID de teste
+    val adUnitId = "ca-app-pub-5167159527096735/1656937187" //ID real
 
     AndroidView(
         modifier = modifier.height(AdSize.BANNER.height.dp),

@@ -76,7 +76,7 @@ fun PromotionalCarousel(
 
     LaunchedEffect(pagerState.pageCount) {
         while (true) {
-            delay(3000L)
+            delay(5000L)
             if (pagerState.pageCount > 0) {
                 val nextPage = (pagerState.currentPage + 1) % pagerState.pageCount
                 pagerState.animateScrollToPage(nextPage)
@@ -325,8 +325,8 @@ fun SoundCard(sound: com.juliocezar.zensounds.ui.viewmodel.Sound, isSelected: Bo
 fun ZenSoundsBannerAd(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val adView = remember { AdView(context) }
-    //val adUnitId = "ca-app-pub-5167159527096735/1656937187" //ID real
-    val adUnitId = "ca-app-pub-3940256099942544/9214589741" //ID de teste
+    val adUnitId = "ca-app-pub-5167159527096735/1656937187" //ID real
+    //val adUnitId = "ca-app-pub-3940256099942544/9214589741" //ID de teste
 
     AndroidView(
         modifier = modifier,

@@ -71,6 +71,20 @@ class SoundViewModel(private val context: Context) : ViewModel() {
         controllerFuture.addListener({
             mediaController = controllerFuture.get()
             setupPlayerListener()
+            // Sincronizar estado do PlaybackService
+            viewModelScope.launch {
+                mediaController?.let { player ->
+                    _isPlaying.value = player.isPlaying
+                    _selectedSound.value = player.currentMediaItem?.mediaMetadata?.title?.toString()
+                    if (player.isPlaying) {
+                        val duration = player.duration
+                        val position = player.currentPosition
+                        if (duration > 0 && duration != C.TIME_UNSET) {
+                            _playbackProgress.value = position.toFloat() / duration.toFloat()
+                        }
+                    }
+                }
+            }
         }, MoreExecutors.directExecutor())
     }
 
