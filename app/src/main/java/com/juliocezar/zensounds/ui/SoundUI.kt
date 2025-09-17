@@ -163,8 +163,8 @@ fun ZenSoundsApp(
 
     val carouselItems = listOf(
         CarouselItem("Bible Versicles", R.drawable.promo_1),
-        CarouselItem("Coming Soon", R.drawable.promo_2),
-        CarouselItem("Coming Soon", R.drawable.promo_3)
+        //CarouselItem("Coming Soon", R.drawable.promo_2),
+        //CarouselItem("Coming Soon", R.drawable.promo_3)
     )
 
     LazyColumn(
@@ -187,14 +187,14 @@ fun ZenSoundsApp(
                     color = Color(0xFFB0C4D4)
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                IconButton(onClick = { /* Ação de configuração aqui */ }) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = "Configurações",
-                        tint = Color(0xFFB0C4D4),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+//                IconButton(onClick = { /* Ação de configuração aqui */ }) {
+//                    Icon(
+//                        imageVector = Icons.Filled.Settings,
+//                        contentDescription = "Configurações",
+//                        tint = Color(0xFFB0C4D4),
+//                        modifier = Modifier.size(28.dp)
+//                    )
+//                }
             }
         }
 
