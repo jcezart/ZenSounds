@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="zen_bible_language">en</string>
+    <string name="zen_bible_verses">Bible verses</string>
+    <string name="zen_bible">Bible</string>
+    <string name="zen_chapters">Chapters</string>
+    <string name="zen_back">Back</string>
+    <string name="zen_player">Player</string>
+    <string name="zen_volume">Volume</string>
+    <string name="zen_loading">Loading…</string>
+    <string name="zen_loading_artwork">Loading artwork…</string>
+    <string name="zen_sound_artwork">Sound artwork</string>
+    <string name="zen_other_sounds">Other Zen sounds</string>
+    <string name="zen_previous">Previous</string>
+    <string name="zen_next">Next</string>
+    <string name="zen_play">Play</string>
+    <string name="zen_pause">Pause</string>
+    <string name="zen_sound_background">%1$s background</string>
+    <string name="zen_sound_rain">Rain</string>
+    <string name="zen_sound_storm">Storm</string>
+    <string name="zen_sound_wind">Wind</string>
+    <string name="zen_sound_forest">Forest</string>
+    <string name="zen_sound_stream">Stream</string>
+    <string name="zen_sound_fireplace">Fireplace</string>
+    <string name="zen_sound_tv_static">TV static</string>
+    <string name="zen_sound_car_engine">Car engine</string>
+    <string name="zen_category_nature">Nature sounds</string>
+    <string name="zen_category_objects">Object sounds</string>
+    <string name="zen_category_vehicles">Vehicle sounds</string>
+    <string name="zen_notification_channel_name">Sound playback</string>
+    <string name="zen_notification_channel_description">Controls for ZenSounds playback</string>
+    <string name="zen_loading_chapter">Loading chapter…</string>
+    <string name="zen_chapter_unavailable">This chapter is not saved in English yet. Connect to the internet and try again.</string>
+    <string name="zen_retry">Try again</string>
+    <string name="zen_translation_credit">Translation: King James Version (KJV). Source: eBible.org / HelloAO.</string>
+    <string name="zen_translation_details">Translation and license</string>
+    <plurals name="zen_chapter_count">
+        <item quantity="one">%1$d chapter</item>
+        <item quantity="other">%1$d chapters</item>
+    </plurals>
+</resources>

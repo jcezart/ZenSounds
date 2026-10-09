@@ -1,18 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.juliocezar.zensounds"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.juliocezar.zensounds"
         minSdk = 30
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 3
         versionName = "3.0"
 
@@ -32,11 +31,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+
     buildFeatures {
         compose = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }
 
@@ -52,8 +55,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.material.icons.extended) // Added
-    implementation(libs.androidx.tools.core)
-    implementation(libs.ui)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.exoplayer)
     testImplementation(libs.junit)
@@ -65,36 +66,31 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.runtime)
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation(libs.androidx.constraintlayout.compose)
 
 
     implementation(libs.billing)
-    implementation(libs.exoplayer)
 
 
     // Room
     implementation(libs.androidx.room.runtime)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
 
     // Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging.interceptor)
 
     // Coroutines para operações assíncronas
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
 
     // --- Jetpack DataStore (preferências, p/ salvar entitlement Pro) ---
-    implementation("androidx.datastore:datastore-preferences:1.1.7")
-
-
-    // --- Coroutines (p/ Billing + DataStore + AudioPlayerManager) ---
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation(libs.androidx.datastore.preferences)
 
     // AdMob
-    implementation("com.google.android.gms:play-services-ads:24.5.0")
-    implementation("com.google.android.ump:user-messaging-platform:3.1.0")
+    implementation(libs.google.mobile.ads)
+    implementation(libs.google.ump)
 }

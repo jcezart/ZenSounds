@@ -2,13 +2,17 @@
 package com.juliocezar.zensounds
 
 import android.content.Context
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
+import androidx.annotation.OptIn
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.*
 import kotlin.math.min
 
+@OptIn(UnstableApi::class)
 class AudioPlayerManager(context: Context) {
     private val player1: ExoPlayer = ExoPlayer.Builder(context).build()
     private val player2: ExoPlayer = ExoPlayer.Builder(context).build()
@@ -117,7 +121,7 @@ class AudioPlayerManager(context: Context) {
                 }
             }
 
-            override fun onPlayerError(error: com.google.android.exoplayer2.PlaybackException) {
+            override fun onPlayerError(error: PlaybackException) {
                 println("DEBUG: Player error for uri=$uri, error=${error.message}")
                 if (currentSoundUri == uri) {
                     overlapJob?.cancel()

@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -162,7 +163,7 @@ fun ZenSoundsApp(
     val selectedSoundName by soundViewModel.selectedSound.collectAsState()
 
     val carouselItems = listOf(
-        CarouselItem("Bible Versicles", R.drawable.promo_1),
+        CarouselItem(stringResource(R.string.zen_bible_verses), R.drawable.promo_1),
         //CarouselItem("Coming Soon", R.drawable.promo_2),
         //CarouselItem("Coming Soon", R.drawable.promo_3)
     )
@@ -217,8 +218,8 @@ fun ZenSoundsApp(
         item {
             ZenSoundsBannerAd(
                 modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 16.dp))
+                    .fillMaxWidth()
+                    .padding(all = 16.dp))
         }
 
         items(soundCategories) { category ->
@@ -253,7 +254,7 @@ fun SoundCategoryRow(
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
         Text(
-            text = category.title,
+            text = localizedCategoryName(category.title),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
@@ -288,7 +289,7 @@ fun SoundCard(sound: com.juliocezar.zensounds.ui.viewmodel.Sound, isSelected: Bo
     ) {
         Image(
             painter = painterResource(id = sound.backgroundResId),
-            contentDescription = "${sound.name} background",
+            contentDescription = stringResource(R.string.zen_sound_background, localizedSoundName(sound.name)),
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -311,7 +312,7 @@ fun SoundCard(sound: com.juliocezar.zensounds.ui.viewmodel.Sound, isSelected: Bo
         ) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = sound.name,
+                text = localizedSoundName(sound.name),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,

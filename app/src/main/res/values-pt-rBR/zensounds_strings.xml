@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="zen_bible_language">pt</string>
+    <string name="zen_bible_verses">Versículos bíblicos</string>
+    <string name="zen_bible">Bíblia</string>
+    <string name="zen_chapters">Capítulos</string>
+    <string name="zen_back">Voltar</string>
+    <string name="zen_player">Reprodutor</string>
+    <string name="zen_volume">Volume</string>
+    <string name="zen_loading">Carregando…</string>
+    <string name="zen_loading_artwork">Carregando imagem…</string>
+    <string name="zen_sound_artwork">Capa do som</string>
+    <string name="zen_other_sounds">Outros sons Zen</string>
+    <string name="zen_previous">Anterior</string>
+    <string name="zen_next">Próximo</string>
+    <string name="zen_play">Reproduzir</string>
+    <string name="zen_pause">Pausar</string>
+    <string name="zen_sound_background">Imagem de %1$s</string>
+    <string name="zen_sound_rain">Chuva</string>
+    <string name="zen_sound_storm">Tempestade</string>
+    <string name="zen_sound_wind">Vento</string>
+    <string name="zen_sound_forest">Floresta</string>
+    <string name="zen_sound_stream">Riacho</string>
+    <string name="zen_sound_fireplace">Lareira</string>
+    <string name="zen_sound_tv_static">Estática de TV</string>
+    <string name="zen_sound_car_engine">Motor de carro</string>
+    <string name="zen_category_nature">Sons da natureza</string>
+    <string name="zen_category_objects">Sons de objetos</string>
+    <string name="zen_category_vehicles">Sons de veículos</string>
+    <string name="zen_notification_channel_name">Reprodução de sons</string>
+    <string name="zen_notification_channel_description">Controles de reprodução do ZenSounds</string>
+    <string name="zen_loading_chapter">Carregando capítulo…</string>
+    <string name="zen_chapter_unavailable">Este capítulo ainda não está salvo em português. Conecte-se à internet e tente novamente.</string>
+    <string name="zen_retry">Tentar novamente</string>
+    <string name="zen_translation_credit">Tradução: Bíblia Livre, fevereiro de 2018. © Diego Santos, Mario Sérgio e Marco Teles. Licença CC BY 4.0 Brasil. Fonte: eBible.org / HelloAO.</string>
+    <string name="zen_translation_details">Tradução e licença</string>
+    <plurals name="zen_chapter_count">
+        <item quantity="one">%1$d capítulo</item>
+        <item quantity="other">%1$d capítulos</item>
+    </plurals>
+</resources>
