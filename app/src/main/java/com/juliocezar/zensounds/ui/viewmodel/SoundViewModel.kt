@@ -3,6 +3,8 @@ package com.juliocezar.zensounds.ui.viewmodel
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -14,8 +16,17 @@ import androidx.media3.common.Player
 import androidx.media3.common.PlaybackException
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
+import com.juliocezar.zensounds.services.PlaybackCommands
+import com.juliocezar.zensounds.data.MixLayer
+import com.juliocezar.zensounds.data.MixRules
+import com.juliocezar.zensounds.data.MixCodec
+import com.juliocezar.zensounds.data.SavedMix
+import com.juliocezar.zensounds.data.TimerRules
 import com.google.common.util.concurrent.ListenableFuture
 import com.juliocezar.zensounds.R
+import com.juliocezar.zensounds.ui.LocalizedLabels
 import com.juliocezar.zensounds.data.AppDatabase
 import com.juliocezar.zensounds.data.Sound as SoundEntity
 import com.juliocezar.zensounds.data.SoundDao
@@ -46,6 +57,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
     private var progressJob: Job? = null
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val controllerReady = CompletableDeferred<MediaController>()
+    private var playbackCommandVersion = 0L
 
     private companion object {
         const val TAG = "ZenSoundsPlayback"
@@ -60,11 +72,26 @@ class SoundViewModel(private val context: Context) : ViewModel() {
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
+    private val _playWhenReady = MutableStateFlow(false)
+    val playWhenReady = _playWhenReady.asStateFlow()
+    private val _activeMixName = MutableStateFlow<String?>(null)
+    val activeMixName = _activeMixName.asStateFlow()
+    private val _activeMixId = MutableStateFlow<String?>(null)
+    val activeMixId = _activeMixId.asStateFlow()
+
     private val _selectedSound = MutableStateFlow<String?>(null)
     val selectedSound: StateFlow<String?> = _selectedSound.asStateFlow()
 
     private val _soundCategories = MutableStateFlow<List<SoundCategory>>(emptyList())
     val soundCategories: StateFlow<List<SoundCategory>> = _soundCategories.asStateFlow()
+
+    private val _mixLayers = MutableStateFlow<List<MixLayer>>(emptyList())
+    val mixLayers = _mixLayers.asStateFlow()
+    private val _timerRemaining = MutableStateFlow(0L)
+    val timerRemaining = _timerRemaining.asStateFlow()
+    private var timerDeadline = 0L
+    private val _playbackError = MutableStateFlow(false)
+    val playbackError = _playbackError.asStateFlow()
 
     init {
         val database = AppDatabase.getDatabase(context)
@@ -78,7 +105,21 @@ class SoundViewModel(private val context: Context) : ViewModel() {
         }
 
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
-        controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
+        controllerFuture = MediaController.Builder(context, sessionToken)
+            .setListener(object : MediaController.Listener {
+                override fun onExtrasChanged(controller: MediaController, extras: Bundle) { readSessionState(extras) }
+                override fun onDisconnected(controller: MediaController) {
+                    _isPlaying.value = false
+                    _playWhenReady.value = false
+                    _activeMixName.value = null
+                    _activeMixId.value = null
+                    _selectedSound.value = null
+                    _mixLayers.value = emptyList()
+                    timerDeadline = 0L
+                    _timerRemaining.value = 0L
+                    _playbackError.value = true
+                }
+            }).buildAsync()
         controllerFuture.addListener({
             try {
                 val player = controllerFuture.get()
@@ -86,12 +127,14 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                     mediaController = player
                     setupPlayerListener()
                     _isPlaying.value = player.isPlaying
-                    _selectedSound.value = player.currentMediaItem?.mediaMetadata?.title?.toString()
+                    _playWhenReady.value = player.playWhenReady
+                    _selectedSound.value = player.currentMediaItem?.mediaId?.takeIf { it.isNotEmpty() }
                     _volume.value = player.volume
                     val duration = player.duration
                     if (duration > 0 && duration != C.TIME_UNSET) {
                         _playbackProgress.value = player.currentPosition.toFloat() / duration.toFloat()
                     }
+                    readSessionState(player.sessionExtras)
                     controllerReady.complete(player)
                     Log.d(TAG, "MediaController conectado; comandos=${player.availableCommands}")
                 }
@@ -126,12 +169,17 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                 Log.d(TAG, "Estado=$playbackState; playWhenReady=${player?.playWhenReady}; suppression=${player?.playbackSuppressionReason}")
             }
 
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                _playWhenReady.value = playWhenReady
+            }
+
             override fun onIsPlayingChanged(isPlayingValue: Boolean) {
                 _isPlaying.value = isPlayingValue
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                _selectedSound.value = mediaItem?.mediaMetadata?.title?.toString()
+                _selectedSound.value = mediaItem?.mediaId?.takeIf { it.isNotEmpty() }
+                _playbackProgress.value = 0f
             }
         })
 
@@ -146,6 +194,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                         _playbackProgress.value = position.toFloat() / duration.toFloat()
                     }
                 }
+                _timerRemaining.value = TimerRules.remaining(timerDeadline, SystemClock.elapsedRealtime())
                 delay(200)
             }
         }
@@ -215,15 +264,18 @@ class SoundViewModel(private val context: Context) : ViewModel() {
     // --- FUNÇÕES DE CONTROLE REFATORADAS PARA USAR O MEDIACONTROLLER ---
 
     fun onSoundClicked(soundName: String) {
+        val commandVersion = ++playbackCommandVersion
+        _playbackError.value = false
         viewModelScope.launch {
             val soundEntity = soundDao.getAllSounds().firstOrNull()?.find { it.name == soundName } ?: return@launch
             val player = awaitPlayer() ?: return@launch
+            if (commandVersion != playbackCommandVersion) return@launch
             val uri = getSoundUri(soundEntity.name) ?: run {
                 Log.e(TAG, "Recurso de áudio desconhecido: ${soundEntity.name}")
                 return@launch
             }
 
-            if (player.currentMediaItem?.mediaMetadata?.title == soundName && player.isPlaying) {
+            if (player.currentMediaItem?.mediaId == soundName && player.isPlaying) {
                 player.pause()
             } else {
                 val mediaItem = MediaItem.Builder()
@@ -231,7 +283,7 @@ class SoundViewModel(private val context: Context) : ViewModel() {
                     .setMediaId(soundEntity.name)
                     .setMediaMetadata(
                         MediaMetadata.Builder()
-                            .setTitle(soundEntity.name)
+                            .setTitle(LocalizedLabels.soundName(context, soundEntity.name))
                             .setArtworkUri(Uri.parse("android.resource://${context.packageName}/${getBackgroundForSound(soundEntity.name)}"))
                             .build()
                     )
@@ -253,13 +305,15 @@ class SoundViewModel(private val context: Context) : ViewModel() {
     }
 
     fun onPlayPauseClicked() {
+        val commandVersion = playbackCommandVersion
         viewModelScope.launch {
             val player = awaitPlayer() ?: return@launch
+            if (commandVersion != playbackCommandVersion) return@launch
             if (!player.isCommandAvailable(Player.COMMAND_PLAY_PAUSE)) {
                 Log.e(TAG, "Sessão não autorizou play/pause")
                 return@launch
             }
-            if (player.isPlaying) {
+            if (player.playWhenReady) {
                 player.pause()
             } else {
                 if (player.mediaItemCount == 0) {
@@ -279,9 +333,16 @@ class SoundViewModel(private val context: Context) : ViewModel() {
         }
     }
 
+    fun onStopClicked() {
+        val version = ++playbackCommandVersion
+        command(PlaybackCommands.STOP_ALL, Bundle.EMPTY, version)
+    }
+
     fun onPreviousClicked() {
+        val commandVersion = playbackCommandVersion
         viewModelScope.launch {
             val allSounds = soundDao.getAllSounds().firstOrNull() ?: return@launch
+            if (commandVersion != playbackCommandVersion) return@launch
             if (allSounds.isEmpty()) return@launch
 
             val currentIndex = allSounds.indexOfFirst { it.name == _selectedSound.value }
@@ -294,8 +355,10 @@ class SoundViewModel(private val context: Context) : ViewModel() {
     }
 
     fun onNextClicked() {
+        val commandVersion = playbackCommandVersion
         viewModelScope.launch {
             val allSounds = soundDao.getAllSounds().firstOrNull() ?: return@launch
+            if (commandVersion != playbackCommandVersion) return@launch
             if (allSounds.isEmpty()) return@launch
 
             val currentIndex = allSounds.indexOfFirst { it.name == _selectedSound.value }
@@ -308,9 +371,98 @@ class SoundViewModel(private val context: Context) : ViewModel() {
     }
 
     fun onVolumeChanged(newVolume: Float) {
-        _volume.value = newVolume
-        mediaController?.volume = newVolume
+        val volume = newVolume.coerceIn(0f, 1f)
+        _volume.value = volume
+        command(PlaybackCommands.MASTER_VOLUME, Bundle().apply { putFloat(PlaybackCommands.VOLUME, volume) })
     }
+
+    private fun readSessionState(extras: Bundle) {
+        if (extras.getInt(PlaybackCommands.VERSION) != 1) return
+        if (extras.containsKey(PlaybackCommands.SELECTED_ID)) {
+            _selectedSound.value = extras.getString(PlaybackCommands.SELECTED_ID)?.takeIf { it.isNotBlank() }
+            _isPlaying.value = extras.getBoolean(PlaybackCommands.PLAYING)
+            _playWhenReady.value = extras.getBoolean(PlaybackCommands.PLAY_WHEN_READY)
+        }
+        _activeMixName.value = extras.getString(PlaybackCommands.MIX_NAME)
+        _activeMixId.value = extras.getString(PlaybackCommands.MIX_SAVED_ID)
+        _mixLayers.value = MixCodec.decodeLayers(extras.getString(PlaybackCommands.LAYERS) ?: "[]")
+        _volume.value = extras.getFloat(PlaybackCommands.VOLUME, 1f)
+        timerDeadline = extras.getLong(PlaybackCommands.TIMER_DEADLINE)
+        _timerRemaining.value = TimerRules.remaining(timerDeadline, SystemClock.elapsedRealtime())
+        _playbackError.value = extras.getBoolean(PlaybackCommands.ERROR)
+    }
+
+    private fun command(action: String, args: Bundle, version: Long? = null) {
+        viewModelScope.launch {
+            val player = awaitPlayer() ?: run { _playbackError.value = true; return@launch }
+            if (version != null && version != playbackCommandVersion) return@launch
+            val sessionCommand = SessionCommand(action, Bundle.EMPTY)
+            if (!player.availableSessionCommands.contains(sessionCommand)) {
+                _playbackError.value = true
+                return@launch
+            }
+            try {
+                val result = player.sendCustomCommand(sessionCommand, args)
+                result.addListener({
+                    try {
+                        if (result.get().resultCode != SessionResult.RESULT_SUCCESS) _playbackError.value = true
+                    } catch (error: Exception) {
+                        Log.e(TAG, "Falha no comando $action", error)
+                        _playbackError.value = true
+                    }
+                }, ContextCompat.getMainExecutor(context))
+            } catch (error: Exception) {
+                Log.e(TAG, "Falha no comando $action", error)
+                _playbackError.value = true
+            }
+        }
+    }
+
+    private fun applyMix(layers: List<MixLayer>, play: Boolean, name: String? = null, savedId: String? = null) {
+        val version = ++playbackCommandVersion
+        val normalized = MixRules.normalize(layers)
+        _mixLayers.value = normalized
+        _activeMixName.value = name
+        _activeMixId.value = savedId
+        _playbackError.value = false
+        command(PlaybackCommands.APPLY_MIX, Bundle().apply {
+            putString(PlaybackCommands.LAYERS, MixCodec.encodeLayers(normalized))
+            putBoolean(PlaybackCommands.PLAY, play)
+            putString(PlaybackCommands.MIX_NAME, name)
+            putString(PlaybackCommands.MIX_SAVED_ID, savedId)
+        }, version)
+    }
+    fun toggleMixLayer(name: String) {
+        if (name !in MixRules.soundNames) return
+        val layers = _mixLayers.value
+        val next = if (layers.any { it.soundName == name }) layers.filterNot { it.soundName == name }
+        else layers + MixLayer(name)
+        applyMix(next, if (layers.isEmpty()) true else mediaController?.playWhenReady == true)
+    }
+    fun useCurrentSoundInMix() {
+        val name = _selectedSound.value ?: return
+        if (name in MixRules.soundNames) applyMix(listOf(MixLayer(name, 1f)), mediaController?.playWhenReady == true)
+    }
+    fun loadMix(mix: SavedMix, play: Boolean = true) = applyMix(mix.layers, play, mix.name, mix.id)
+    fun openSavedMix(mix: SavedMix) {
+        if (_selectedSound.value != PlaybackCommands.MIX_ID || _activeMixId.value != mix.id) loadMix(mix)
+    }
+    fun onLayerVolumeChanged(name: String, volume: Float) {
+        if (!volume.isFinite()) return
+        _mixLayers.value = _mixLayers.value.map { if (it.soundName == name) it.copy(volume = volume.coerceIn(0f, 1f)) else it }
+        command(PlaybackCommands.LAYER_VOLUME, Bundle().apply {
+            putString(PlaybackCommands.NAME, name)
+            putFloat(PlaybackCommands.VOLUME, volume.coerceIn(0f, 1f))
+        })
+    }
+    fun setTimer(minutes: Int, fadeSeconds: Int) {
+        if (minutes !in 1..1440) return
+        command(PlaybackCommands.SET_TIMER, Bundle().apply {
+            putInt(PlaybackCommands.MINUTES, minutes)
+            putInt(PlaybackCommands.FADE_SECONDS, fadeSeconds.coerceIn(0, 60))
+        })
+    }
+    fun cancelTimer() = command(PlaybackCommands.CANCEL_TIMER, Bundle.EMPTY)
 
     override fun onCleared() {
         super.onCleared()

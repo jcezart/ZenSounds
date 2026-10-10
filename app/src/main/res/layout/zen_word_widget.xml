@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="20dp"
+    android:background="@drawable/zen_widget_background">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:maxLines="1" android:ellipsize="end" android:includeFontPadding="true"
+        android:text="@string/ess_word_today" android:textColor="@color/zen_widget_accent"
+        android:textSize="10sp" android:fontFamily="sans-serif-medium" android:letterSpacing="0.1" />
+    <LinearLayout android:id="@+id/widget_content" android:layout_width="match_parent"
+        android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical"
+        android:paddingTop="10dp" android:paddingBottom="8dp">
+        <TextView android:id="@+id/widget_verse" android:layout_width="match_parent"
+            android:layout_height="0dp" android:layout_weight="1" android:text="@string/ess_widget_preview"
+            android:textColor="@color/zen_widget_text" android:textSize="18sp"
+            android:fontFamily="sans-serif" android:gravity="top"
+            android:includeFontPadding="true" android:fallbackLineSpacing="true"
+            android:paddingBottom="4dp" android:lineSpacingExtra="2dp"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="12sp"
+            android:autoSizeMaxTextSize="18sp" android:autoSizeStepGranularity="1sp"
+            android:maxLines="10" android:ellipsize="end" />
+        <TextView android:id="@+id/widget_reference" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:paddingTop="6dp" android:text="@string/ess_widget_preview_reference"
+            android:maxLines="1" android:ellipsize="end" android:includeFontPadding="true"
+            android:textColor="@color/zen_widget_accent" android:textSize="12sp" android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:text="ZenSounds" android:textColor="@color/zen_widget_secondary" android:textSize="11sp" />
+        <ImageButton android:id="@+id/widget_shuffle" android:layout_width="48dp" android:layout_height="48dp"
+            android:padding="13dp" android:src="@drawable/zen_widget_shuffle" android:background="@drawable/zen_widget_button"
+            android:contentDescription="@string/ess_shuffle_word" />
+    </LinearLayout>
+</LinearLayout>

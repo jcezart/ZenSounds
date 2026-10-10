@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ess_shuffle_word">Sortear outro versículo</string>
+    <string name="ess_shuffle_error">Não foi possível trocar o versículo. Tente novamente.</string>
+    <string name="ess_my_mixes">Meus mixes</string>
+    <string name="ess_mix_edit">Editar mistura</string>
+    <string name="ess_mix_title">Mistura de sons</string>
+    <string name="ess_mix_description">Combine sons e ajuste cada volume para criar seu ambiente.</string>
+    <string name="ess_add_layer">Adicionar à mistura</string>
+    <string name="ess_remove_layer">Remover da mistura</string>
+    <string name="ess_mix_empty">Escolha os sons abaixo para começar sua mistura.</string>
+    <string name="ess_mix_current">Usar o som atual</string>
+    <string name="ess_mix_saved">Combinações salvas</string>
+    <string name="ess_mix_saved_empty">Salve suas combinações favoritas para tocar novamente.</string>
+    <string name="ess_mix_save">Salvar combinação</string>
+    <string name="ess_mix_name">Nome da combinação</string>
+    <string name="ess_mix_name_hint">Por exemplo: Leitura tranquila</string>
+    <string name="ess_mix_name_help">Salvar com um nome existente atualiza aquela combinação.</string>
+    <string name="ess_mix_play">Tocar combinação</string>
+    <string name="ess_mix_delete">Excluir combinação</string>
+    <string name="ess_master_volume">Volume geral</string>
+    <string name="ess_layer_volume">Volume: %1$s</string>
+    <string name="ess_stop">Parar reprodução</string>
+    <string name="ess_cancel">Cancelar</string>
+    <string name="ess_save">Salvar</string>
+    <string name="ess_audio_error">Não foi possível reproduzir o áudio. Tente selecionar o som ou a combinação novamente.</string>
+    <string name="ess_timer">Timer de desligamento</string>
+    <string name="ess_timer_minutes">Duração em minutos</string>
+    <string name="ess_timer_range">Escolha de 1 a 1440 minutos. A contagem continua mesmo ao pausar.</string>
+    <string name="ess_timer_fade">Reduzir o volume ao final: %1$d segundos</string>
+    <string name="ess_timer_fade_help">Escolha 0 para parar sem reduzir o volume.</string>
+    <string name="ess_timer_start">Iniciar timer</string>
+    <string name="ess_timer_cancel">Cancelar timer</string>
+    <string name="ess_timer_remaining">Desliga em %1$s</string>
+    <string name="ess_timer_preset">%1$d min</string>
+    <string name="ess_widgets">Widgets na tela inicial</string>
+    <string name="ess_widget_compact">Palavra do dia · Compacto</string>
+    <string name="ess_widget_large">Palavra do dia · Amplo</string>
+    <string name="ess_widget_description">Um versículo positivo por dia, com um botão para sortear outro.</string>
+    <string name="ess_widget_help">Adicione um widget aqui ou pressione uma área vazia da tela inicial, escolha Widgets e procure ZenSounds.</string>
+    <string name="ess_widget_unsupported">Seu launcher precisa que o widget seja adicionado pelo menu Widgets da tela inicial.</string>
+    <string name="ess_widget_retry">Abra o ZenSounds ou tente o botão de sorteio.</string>
+    <string name="ess_widget_preview">O SENHOR é meu pastor, nada me faltará.</string>
+    <string name="ess_widget_preview_reference">Salmos 23:1</string>
+    <plurals name="ess_mix_layer_count">
+        <item quantity="one">%1$d som na mistura</item>
+        <item quantity="other">%1$d sons na mistura</item>
+    </plurals>
+</resources>

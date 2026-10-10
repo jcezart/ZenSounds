@@ -4,64 +4,32 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.google.android.gms.ads.MobileAds
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import com.juliocezar.zensounds.widgets.DailyWordWidgets
+import com.juliocezar.zensounds.widgets.WidgetReadingRequest
 import com.juliocezar.zensounds.services.PlaybackService
-import com.juliocezar.zensounds.ui.theme.ZenSoundsTheme
 import com.juliocezar.zensounds.ui.MainScreen
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import com.google.android.ump.ConsentInformation
-import com.google.android.ump.UserMessagingPlatform
-import com.google.android.ump.ConsentRequestParameters
-import com.google.android.ump.FormError
+import com.juliocezar.zensounds.ui.theme.ZenSoundsTheme
 
 class MainActivity : ComponentActivity() {
+    private var widgetReading by mutableStateOf<WidgetReadingRequest?>(null)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        widgetReading = DailyWordWidgets.readIntent(intent)
 
         startService(Intent(this, PlaybackService::class.java))
 
         setContent {
             ZenSoundsTheme {
-                MainScreen()
+                MainScreen(widgetReading=widgetReading)
             }
         }
-
-        val consentInformation = UserMessagingPlatform.getConsentInformation(this)
-        consentInformation.requestConsentInfoUpdate(
-            this,
-            ConsentRequestParameters.Builder().build(),
-            {
-                if (consentInformation.isConsentFormAvailable) {
-                    loadForm(consentInformation)
-                } else {
-                    initializeAds()
-                }
-            },
-            { error: FormError? ->
-                initializeAds()
-            }
-        )
     }
-
-    private fun loadForm(consentInformation: ConsentInformation) {
-        UserMessagingPlatform.loadConsentForm(
-            this,
-            { consentForm ->
-                consentForm.show(this) { error: FormError? ->
-                    initializeAds()
-                }
-            },
-            { error: FormError? ->
-                initializeAds()
-            }
-        )
-    }
-
-    private fun initializeAds() {
-        CoroutineScope(Dispatchers.IO).launch {
-            MobileAds.initialize(this@MainActivity) {}
-        }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        widgetReading = DailyWordWidgets.readIntent(intent)
     }
 }

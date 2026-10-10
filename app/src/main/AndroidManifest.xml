@@ -19,12 +19,6 @@
         android:theme="@style/Theme.ZenSounds"
         tools:targetApi="31">
 
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-5167159527096735~2031539378"/>
-        <!--android:value="ca-app-pub-3940256099942544~3347511713" ID de teste-->
-        <!--android:value="ca-app-pub-5167159527096735~2031539378" ID de produção-->
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -46,6 +40,33 @@
             </intent-filter>
         </service>
 
+    
+    <receiver
+        android:name="com.juliocezar.zensounds.widgets.DailyWordWidget"
+        android:exported="false"
+        android:label="@string/ess_widget_large">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            <action android:name="android.intent.action.DATE_CHANGED" />
+            <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            <action android:name="android.intent.action.TIME_SET" />
+            <action android:name="android.intent.action.LOCALE_CHANGED" />
+        </intent-filter>
+        <meta-data android:name="android.appwidget.provider" android:resource="@xml/zen_word_widget_info" />
+    </receiver>
+    <receiver
+        android:name="com.juliocezar.zensounds.widgets.DailyWordCompactWidget"
+        android:exported="false"
+        android:label="@string/ess_widget_compact">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            <action android:name="android.intent.action.DATE_CHANGED" />
+            <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            <action android:name="android.intent.action.TIME_SET" />
+            <action android:name="android.intent.action.LOCALE_CHANGED" />
+        </intent-filter>
+        <meta-data android:name="android.appwidget.provider" android:resource="@xml/zen_word_widget_compact_info" />
+    </receiver>
     </application>
 
 </manifest>

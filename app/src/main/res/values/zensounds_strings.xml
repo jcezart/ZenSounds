@@ -30,7 +30,7 @@
     <string name="zen_notification_channel_name">Sound playback</string>
     <string name="zen_notification_channel_description">Controls for ZenSounds playback</string>
     <string name="zen_loading_chapter">Loading chapter…</string>
-    <string name="zen_chapter_unavailable">This chapter is not saved in English yet. Connect to the internet and try again.</string>
+    <string name="zen_chapter_unavailable">This chapter could not be loaded. Try again.</string>
     <string name="zen_retry">Try again</string>
     <string name="zen_translation_credit">Translation: King James Version (KJV). Source: eBible.org / HelloAO.</string>
     <string name="zen_translation_details">Translation and license</string>

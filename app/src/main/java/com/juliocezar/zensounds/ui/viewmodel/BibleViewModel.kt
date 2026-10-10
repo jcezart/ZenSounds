@@ -1,177 +1,120 @@
 package com.juliocezar.zensounds.ui.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import com.juliocezar.zensounds.api.RetrofitClient
-import com.juliocezar.zensounds.data.AppDatabase
+import com.juliocezar.zensounds.R
+import com.juliocezar.zensounds.data.BibleCatalog
+import com.juliocezar.zensounds.data.BibleRepository
 import com.juliocezar.zensounds.data.Verse
-import com.juliocezar.zensounds.data.VerseDao
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.awaitResponse
-import java.util.Locale
+import kotlin.coroutines.coroutineContext
 
-class BibleViewModel(private val context: Context) : ViewModel() {
+class BibleViewModel(
+    private val context: Context
+) : ViewModel() {
 
-    private val verseDao: VerseDao = AppDatabase.getDatabase(context).verseDao()
+    private val repository = BibleRepository(context)
+    private var chapterJob: Job? = null
 
     private val _bibleVerses = MutableStateFlow<List<Verse>>(emptyList())
-    val bibleVerses: StateFlow<List<Verse>> get() = _bibleVerses
+    val bibleVerses = _bibleVerses.asStateFlow()
 
-    private val _language = MutableStateFlow(devicePreferredLanguage()) // "pt" ou "en"
-    val languageFlow: StateFlow<String> = _language
-
-    fun currentLanguage(): String = _language.value
-
-    private fun devicePreferredLanguage(): String {
-        val lang = try {
-            val loc = context.resources.configuration.locales.get(0)
-            loc?.language ?: Locale.getDefault().language
-        } catch (_: Throwable) {
-            Locale.getDefault().language
-        }
-        return when (lang.lowercase()) {
-            "pt", "pt_br", "pt-pt", "pt-br" -> "pt"
-            "en", "en_us", "en_gb", "en-us", "en-gb" -> "en"
-            else -> "en"
-        }
-    }
-
-    data class BookMeta(
-        val code: String,      // ex.: "GEN"
-        val namePt: String,    // "Gênesis"
-        val nameEn: String,    // "Genesis"
-        val chapters: Int      // 50
+    private val _language = MutableStateFlow(
+        context.getString(R.string.zen_bible_language)
     )
+    val languageFlow = _language.asStateFlow()
 
-    val allBooks = listOf(
-        BookMeta("GEN", "Gênesis",      "Genesis",     50),
-        BookMeta("EXO", "Êxodo",        "Exodus",      40),
-        BookMeta("LEV", "Levítico",     "Leviticus",   27),
-        BookMeta("NUM", "Números",      "Numbers",     36),
-        BookMeta("DEU", "Deuteronômio", "Deuteronomy", 34),
-    )
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
-    fun bookByCode(code: String): BookMeta? = allBooks.find { it.code == code }
+    private val _chapterError = MutableStateFlow<String?>(null)
+    val chapterError = _chapterError.asStateFlow()
 
-    private fun dbBookNameByCode(code: String): String? = when (code) {
-        "GEN" -> "Genesis"
-        "EXO" -> "Exodus"
-        "LEV" -> "Leviticus"
-        "NUM" -> "Numbers"
-        "DEU" -> "Deuteronomy"
-        else  -> null
-    }
+    val allBooks = BibleCatalog.books
 
-    init {
-        viewModelScope.launch {
-            _language.value = devicePreferredLanguage()
-            loadChapter("GEN", 1)
-        }
-    }
+    fun bookByCode(code: String) = BibleCatalog.book(code)
+
+    fun currentLanguage() = _language.value
 
     fun setLanguageFromDevice() {
-        setLanguage(devicePreferredLanguage())
+        setLanguage(context.getString(R.string.zen_bible_language))
     }
 
     fun setLanguage(lang: String) {
-        _language.value = lang
-        loadChapter("GEN", 1)
-    }
+        val normalized = if (
+            lang.lowercase() in listOf("pt", "pt-br", "pt_br")
+        ) {
+            "pt"
+        } else {
+            "en"
+        }
 
-    private fun translationFor(lang: String): String = when (lang) {
-        "pt" -> "por_blj"
-        "en" -> "eng_kjv"
-        else -> "eng_kjv"
+        if (normalized == _language.value) return
+
+        chapterJob?.cancel()
+        _language.value = normalized
+        _bibleVerses.value = emptyList()
+        _chapterError.value = null
+        _isLoading.value = false
     }
 
     fun loadChapter(bookCode: String, chapter: Int) {
-        viewModelScope.launch {
-            val dbName = dbBookNameByCode(bookCode) ?: return@launch
+        val book = bookByCode(bookCode) ?: return
 
-            var verses = verseDao.getVersesByBookChapter(dbName, chapter, _language.value)
-            if (verses.isEmpty()) {
-                fetchAndInsertChapter(bookCode, chapter, _language.value)
-                verses = verseDao.getVersesByBookChapter(dbName, chapter, _language.value)
-            }
+        if (chapter !in 1..book.chapters) return
 
-            if (verses.isEmpty()) {
-                val altLang = if (_language.value == "pt") "en" else "pt"
-                fetchAndInsertChapter(bookCode, chapter, altLang)
-                val alt = verseDao.getVersesByBookChapter(dbName, chapter, altLang)
-                if (alt.isNotEmpty()) {
-                    _language.value = altLang
-                    verses = alt
+        val language = _language.value
+
+        chapterJob?.cancel()
+        _bibleVerses.value = emptyList()
+        _chapterError.value = null
+        _isLoading.value = true
+
+        chapterJob = viewModelScope.launch {
+            try {
+                val verses = repository.chapter(
+                    code = bookCode,
+                    number = chapter,
+                    language = language
+                )
+
+                coroutineContext.ensureActive()
+                _bibleVerses.value = verses
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(
+                    "ZenSoundsBible",
+                    "Failed $bookCode/$chapter ($language)",
+                    e
+                )
+
+                _chapterError.value = "chapter_unavailable"
+            } finally {
+                if (coroutineContext[Job]?.isActive == true) {
+                    _isLoading.value = false
                 }
             }
-
-            _bibleVerses.value = verses
-        }
-    }
-
-    private suspend fun fetchAndInsertChapter(
-        bookCode: String,
-        chapter: Int,
-        targetLang: String
-    ) {
-        val translationId = translationFor(targetLang)
-        val resp = runCatching {
-            RetrofitClient.bibleService.getChapter(translationId, bookCode, chapter).awaitResponse()
-        }.getOrNull()
-
-        if (resp?.isSuccessful != true) return
-        val root = resp.body() ?: return
-        if (!root.isJsonObject) return
-
-        val obj: JsonObject = root.asJsonObject
-        val chapterObj: JsonObject = obj.getAsJsonObject("chapter") ?: return
-        val content: JsonArray = chapterObj.getAsJsonArray("content") ?: return
-
-        val dbBook = dbBookNameByCode(bookCode) ?: return
-
-        val toInsert = buildList {
-            content.forEach { el ->
-                val item = el.asJsonObject
-                if (item.get("type")?.asString == "verse") {
-                    val num = item.get("number")?.asInt ?: return@forEach
-                    val pieces = item.getAsJsonArray("content")
-                    val text = buildString {
-                        pieces?.forEach { p ->
-                            if (p.isJsonPrimitive && p.asJsonPrimitive.isString) {
-                                append(p.asString).append(' ')
-                            }
-                        }
-                    }.trim()
-                    add(
-                        Verse(
-                            book = dbBook,
-                            chapter = chapter,
-                            verseNumber = num,
-                            text = text,
-                            language = targetLang
-                        )
-                    )
-                }
-            }
-        }
-
-        if (toInsert.isNotEmpty()) {
-            verseDao.insertAll(toInsert)
         }
     }
 }
 
-class BibleViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+class BibleViewModelFactory(
+    private val context: Context
+) : ViewModelProvider.Factory {
+
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(BibleViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return BibleViewModel(context) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        require(modelClass.isAssignableFrom(BibleViewModel::class.java))
+
+        @Suppress("UNCHECKED_CAST")
+        return BibleViewModel(context.applicationContext) as T
     }
 }

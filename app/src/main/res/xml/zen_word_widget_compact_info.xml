@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="140dp" android:minHeight="170dp"
+    android:minResizeWidth="140dp" android:minResizeHeight="170dp"
+    android:targetCellWidth="2" android:targetCellHeight="2"
+    android:initialKeyguardLayout="@layout/zen_word_widget_compact"
+    android:initialLayout="@layout/zen_word_widget_compact" android:previewLayout="@layout/zen_word_widget_compact"
+    android:resizeMode="horizontal|vertical" android:updatePeriodMillis="1800000"
+    android:description="@string/ess_widget_description" android:widgetCategory="home_screen|keyguard" />

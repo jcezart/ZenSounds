@@ -1,0 +1,7 @@
+<resources>
+    <color name="zen_widget_background">#FFFDF9</color>
+    <color name="zen_widget_text">#292622</color>
+    <color name="zen_widget_secondary">#6E6864</color>
+    <color name="zen_widget_accent">#A3533C</color>
+    <color name="zen_widget_button">#E5DEEB</color>
+</resources>

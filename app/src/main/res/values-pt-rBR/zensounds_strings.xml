@@ -30,7 +30,7 @@
     <string name="zen_notification_channel_name">Reprodução de sons</string>
     <string name="zen_notification_channel_description">Controles de reprodução do ZenSounds</string>
     <string name="zen_loading_chapter">Carregando capítulo…</string>
-    <string name="zen_chapter_unavailable">Este capítulo ainda não está salvo em português. Conecte-se à internet e tente novamente.</string>
+    <string name="zen_chapter_unavailable">Não foi possível carregar este capítulo. Tente novamente.</string>
     <string name="zen_retry">Tentar novamente</string>
     <string name="zen_translation_credit">Tradução: Bíblia Livre, fevereiro de 2018. © Diego Santos, Mario Sérgio e Marco Teles. Licença CC BY 4.0 Brasil. Fonte: eBible.org / HelloAO.</string>
     <string name="zen_translation_details">Tradução e licença</string>

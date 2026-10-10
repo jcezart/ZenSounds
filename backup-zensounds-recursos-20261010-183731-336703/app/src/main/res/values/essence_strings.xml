@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ess_home">Home</string>
+    <string name="ess_sounds">Sounds</string>
+    <string name="ess_favorites">Favorites</string>
+    <string name="ess_presence">More presence</string>
+    <string name="ess_peace">More peace</string>
+    <string name="ess_read">Read</string>
+    <string name="ess_relax">Relax</string>
+    <string name="ess_word_today">WORD OF THE DAY</string>
+    <string name="ess_today_reference">TODAY · %1$s</string>
+    <string name="ess_word_error">The verse could not be loaded. Try again.</string>
+    <string name="ess_open_chapter">Open chapter</string>
+    <string name="ess_start_bible">Start reading</string>
+    <string name="ess_resume_bible">Resume the Bible</string>
+    <string name="ess_reading_position">%1$s · Chapter %2$d</string>
+    <string name="ess_explore_psalms">Explore Psalms</string>
+    <string name="ess_explore_book">Explore %1$s</string>
+    <string name="ess_sound_pause">A moment with sound</string>
+    <string name="ess_see_all">See all</string>
+    <string name="ess_my_mix">My mix</string>
+    <string name="ess_ambient_sound">Ambient sound</string>
+    <string name="ess_continuous_sound">Your peaceful atmosphere, playing on repeat.</string>
+    <string name="ess_relax_title">Breathe. Find your pause.</string>
+    <string name="ess_relax_description">Choose a sound for reading, prayer or rest.</string>
+    <string name="ess_explore_sounds">Explore sounds</string>
+    <string name="ess_save_verse">Save verse</string>
+    <string name="ess_add_favorite">Add to favorites</string>
+    <string name="ess_remove_favorite">Remove from favorites</string>
+    <string name="ess_share_verse">Share verse</string>
+    <string name="ess_saved_verses">Saved verses</string>
+    <string name="ess_favorites_empty">Save verses and sounds to find them here. Verses are shown in the current app language.</string>
+    <string name="ess_appearance">Appearance</string>
+    <string name="ess_appearance_help">Follow your phone theme or choose the appearance you prefer.</string>
+    <string name="ess_theme_system">System</string>
+    <string name="ess_theme_light">Light</string>
+    <string name="ess_theme_dark">Dark</string>
+    <string name="ess_close">Close</string>
+    <string name="ess_understood">Got it</string>
+    <string name="ess_pro_planned">ZenSounds Pro is being prepared. Planned features include ad removal, sound mixing, saved combinations and a custom timer. Purchases are not available yet.</string>
+    <string name="ess_reading_subtitle">A moment to read peacefully.</string>
+    <string name="ess_advertisement">Advertisement</string>
+</resources>

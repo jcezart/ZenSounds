@@ -90,7 +90,4 @@ dependencies {
     // --- Jetpack DataStore (preferências, p/ salvar entitlement Pro) ---
     implementation(libs.androidx.datastore.preferences)
 
-    // AdMob
-    implementation(libs.google.mobile.ads)
-    implementation(libs.google.ump)
 }

@@ -1,0 +1,21 @@
+[
+  "app/src/main/.DS_Store",
+  "app/src/main/java/com/juliocezar/zensounds/data/DailyWordStore.kt",
+  "app/src/main/java/com/juliocezar/zensounds/data/PlaybackModels.kt",
+  "app/src/main/java/com/juliocezar/zensounds/data/SoundCatalog.kt",
+  "app/src/main/java/com/juliocezar/zensounds/services/PlaybackCommands.kt",
+  "app/src/main/java/com/juliocezar/zensounds/ui/MixUI.kt",
+  "app/src/main/java/com/juliocezar/zensounds/widgets/DailyWordWidget.kt",
+  "app/src/main/res/.DS_Store",
+  "app/src/main/res/drawable/zen_widget_background.xml",
+  "app/src/main/res/drawable/zen_widget_button.xml",
+  "app/src/main/res/drawable/zen_widget_shuffle.xml",
+  "app/src/main/res/layout/zen_word_widget.xml",
+  "app/src/main/res/layout/zen_word_widget_compact.xml",
+  "app/src/main/res/values/features_strings.xml",
+  "app/src/main/res/values/zen_widget_colors.xml",
+  "app/src/main/res/values-night/zen_widget_colors.xml",
+  "app/src/main/res/values-pt-rBR/features_strings.xml",
+  "app/src/main/res/xml/zen_word_widget_compact_info.xml",
+  "app/src/main/res/xml/zen_word_widget_info.xml"
+]

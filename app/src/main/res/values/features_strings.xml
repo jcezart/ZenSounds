@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ess_shuffle_word">New verse</string>
+    <string name="ess_shuffle_error">The new verse could not be loaded. Try again.</string>
+    <string name="ess_my_mixes">My mixes</string>
+    <string name="ess_mix_edit">Edit mix</string>
+    <string name="ess_mix_title">Sound mix</string>
+    <string name="ess_mix_description">Combine sounds and adjust each volume to create your atmosphere.</string>
+    <string name="ess_add_layer">Add to the mix</string>
+    <string name="ess_remove_layer">Remove from the mix</string>
+    <string name="ess_mix_empty">Choose the sounds below to start your mix.</string>
+    <string name="ess_mix_current">Use the current sound</string>
+    <string name="ess_mix_saved">Saved combinations</string>
+    <string name="ess_mix_saved_empty">Save your favorite combinations to play them again.</string>
+    <string name="ess_mix_save">Save combination</string>
+    <string name="ess_mix_name">Combination name</string>
+    <string name="ess_mix_name_hint">For example: Peaceful reading</string>
+    <string name="ess_mix_name_help">Saving with an existing name updates that combination.</string>
+    <string name="ess_mix_play">Play combination</string>
+    <string name="ess_mix_delete">Delete combination</string>
+    <string name="ess_master_volume">Overall volume</string>
+    <string name="ess_layer_volume">Volume: %1$s</string>
+    <string name="ess_stop">Stop playback</string>
+    <string name="ess_cancel">Cancel</string>
+    <string name="ess_save">Save</string>
+    <string name="ess_audio_error">Audio could not be played. Try selecting the sound or combination again.</string>
+    <string name="ess_timer">Sleep timer</string>
+    <string name="ess_timer_minutes">Duration in minutes</string>
+    <string name="ess_timer_range">Choose from 1 to 1440 minutes. The countdown continues while paused.</string>
+    <string name="ess_timer_fade">Fade out: %1$d seconds</string>
+    <string name="ess_timer_fade_help">Choose 0 to stop without fading.</string>
+    <string name="ess_timer_start">Start timer</string>
+    <string name="ess_timer_cancel">Cancel timer</string>
+    <string name="ess_timer_remaining">Stops in %1$s</string>
+    <string name="ess_timer_preset">%1$d min</string>
+    <string name="ess_widgets">Home screen widgets</string>
+    <string name="ess_widget_compact">Word of the day · Compact</string>
+    <string name="ess_widget_large">Word of the day · Large</string>
+    <string name="ess_widget_description">A daily positive Bible verse, with a button to choose another.</string>
+    <string name="ess_widget_help">Add a widget here or hold an empty area on your home screen, choose Widgets and find ZenSounds.</string>
+    <string name="ess_widget_unsupported">Your launcher requires adding the widget from its Widgets menu.</string>
+    <string name="ess_widget_retry">Open ZenSounds or try the shuffle button.</string>
+    <string name="ess_widget_preview">The LORD is my shepherd; I shall not want.</string>
+    <string name="ess_widget_preview_reference">Psalms 23:1</string>
+    <plurals name="ess_mix_layer_count">
+        <item quantity="one">%1$d sound in the mix</item>
+        <item quantity="other">%1$d sounds in the mix</item>
+    </plurals>
+</resources>
